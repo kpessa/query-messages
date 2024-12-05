@@ -8,6 +8,9 @@ import Contacts
 // Paths to databases
 let chatDBPath = NSHomeDirectory() + "/Library/Messages/chat.db"
 
+// Add this at the top of the file with other global variables
+let contactNameCache = NSCache<NSString, NSString>()
+
 // Helper function to execute a SQL query
 func executeSQLQuery(dbPath: String, query: String, parameters: [Any] = []) -> [[String: Any]]? {
     var db: OpaquePointer?
@@ -79,51 +82,88 @@ func getAvailableChats() -> [(chatID: Int64, contactID: String, messageCount: In
     SELECT
         c.ROWID AS chat_id,
         h.id AS handle_id,
-        COUNT(m.ROWID) AS message_count,
-        MAX(m.date) AS last_message_date
+        (SELECT COUNT(*) 
+         FROM chat_message_join cmj2 
+         WHERE cmj2.chat_id = c.ROWID) AS message_count,
+        (SELECT MAX(m2.date) 
+         FROM chat_message_join cmj2 
+         JOIN message m2 ON cmj2.message_id = m2.ROWID 
+         WHERE cmj2.chat_id = c.ROWID) AS last_message_date
     FROM chat c
     JOIN chat_handle_join chj ON c.ROWID = chj.chat_id
     JOIN handle h ON chj.handle_id = h.ROWID
-    JOIN chat_message_join cmj ON c.ROWID = cmj.chat_id
-    JOIN message m ON cmj.message_id = m.ROWID
+    WHERE EXISTS (
+        SELECT 1 
+        FROM chat_message_join cmj 
+        WHERE cmj.chat_id = c.ROWID
+    )
     GROUP BY c.ROWID, h.id
     ORDER BY last_message_date DESC
-    LIMIT 100
     """
 
+    // Add query execution time logging
+    let startTime = CFAbsoluteTimeGetCurrent()
     guard let results = executeSQLQuery(dbPath: chatDBPath, query: query) else {
         return []
     }
+    let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+    print("Query execution time: \(String(format: "%.2f", timeElapsed)) seconds")
 
-    var chats: [(Int64, String, Int64, String, String?)] = []
+    var chats: [(chatID: Int64, contactID: String, messageCount: Int64, lastMessageDate: String, contactName: String?)] = []
+    
+    // Process results using a dispatch group for parallel processing
+    let group = DispatchGroup()
+    let queue = DispatchQueue(label: "com.chat.processing", attributes: .concurrent)
+    let syncQueue = DispatchQueue(label: "com.chat.sync")
+    
     for row in results {
-        if let chat_id = row["chat_id"] as? Int64,
-           let handle_id = row["handle_id"] as? String,
-           let message_count = row["message_count"] as? Int64,
-           let last_message_date = row["last_message_date"] as? Int64 {
+        group.enter()
+        queue.async {
+            if let chat_id = row["chat_id"] as? Int64,
+               let handle_id = row["handle_id"] as? String,
+               let message_count = row["message_count"] as? Int64,
+               let last_message_date = row["last_message_date"] as? Int64 {
 
-            let contactName = getContactName(phoneNumber: handle_id)
-            // Convert date
-            let dateInSeconds = Double(last_message_date) / 1000000000 + 978307200
-            let date = Date(timeIntervalSince1970: dateInSeconds)
-            let formatter = DateFormatter()
-            formatter.dateStyle = .short
-            formatter.timeStyle = .short
-            let formattedDate = formatter.string(from: date)
+                let contactName = getContactName(phoneNumber: handle_id)
+                let dateInSeconds = Double(last_message_date) / 1000000000 + 978307200
+                let date = Date(timeIntervalSince1970: dateInSeconds)
+                let formattedDate = dateFormatter.string(from: date)
 
-            chats.append((chat_id, handle_id, message_count, formattedDate, contactName))
+                syncQueue.async {
+                    chats.append((chat_id, handle_id, message_count, formattedDate, contactName))
+                }
+            }
+            group.leave()
         }
     }
-    return chats
+    
+    // Wait for all processing to complete
+    group.wait()
+
+    return chats.sorted { $0.lastMessageDate > $1.lastMessageDate }
 }
 
-// Function to get contact name using Contacts framework
+// Add this helper function to improve date formatting performance
+let dateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .short
+    formatter.timeStyle = .short
+    return formatter
+}()
+
+// Updated getContactName function with caching
 func getContactName(phoneNumber: String) -> String? {
+    // Check cache first
+    if let cachedName = contactNameCache.object(forKey: phoneNumber as NSString) {
+        return cachedName as String
+    }
+    
     let semaphore = DispatchSemaphore(value: 0)
     var contactName: String?
 
     let store = CNContactStore()
-
+    
+    // Only request access if we haven't cached the result
     store.requestAccess(for: .contacts) { granted, error in
         if granted {
             let keysToFetch = [
@@ -131,19 +171,19 @@ func getContactName(phoneNumber: String) -> String? {
                 CNContactFamilyNameKey,
                 CNContactPhoneNumbersKey
             ] as [CNKeyDescriptor]
-
-            let request = CNContactFetchRequest(keysToFetch: keysToFetch)
-
+            
+            // Create a predicate to search for phone numbers
+            let phoneNumberDigits = phoneNumber.filter("0123456789".contains)
+            let predicate = CNContact.predicateForContacts(matching: CNPhoneNumber(stringValue: phoneNumberDigits))
+            
             do {
-                try store.enumerateContacts(with: request) { (contact, stop) in
-                    for phone in contact.phoneNumbers {
-                        let phoneNumberDigits = phone.value.stringValue.filter("0123456789".contains)
-                        let inputDigits = phoneNumber.filter("0123456789".contains)
-                        if phoneNumberDigits.contains(inputDigits) || inputDigits.contains(phoneNumberDigits) {
-                            contactName = "\(contact.givenName) \(contact.familyName)".trimmingCharacters(in: .whitespaces)
-                            stop.pointee = true
-                            break
-                        }
+                // Use find instead of enumerate for better performance
+                let contacts = try store.unifiedContacts(matching: predicate, keysToFetch: keysToFetch)
+                if let contact = contacts.first {
+                    contactName = "\(contact.givenName) \(contact.familyName)".trimmingCharacters(in: .whitespaces)
+                    // Cache the result
+                    if let name = contactName {
+                        contactNameCache.setObject(name as NSString, forKey: phoneNumber as NSString)
                     }
                 }
             } catch {
@@ -155,7 +195,13 @@ func getContactName(phoneNumber: String) -> String? {
         semaphore.signal()
     }
 
-    _ = semaphore.wait(timeout: .now() + 5)
+    _ = semaphore.wait(timeout: .now() + 2) // Reduced timeout to 2 seconds
+    
+    // Cache nil results as well to avoid repeated lookups
+    if contactName == nil {
+        contactNameCache.setObject(phoneNumber as NSString, forKey: phoneNumber as NSString)
+    }
+    
     return contactName
 }
 
@@ -236,44 +282,69 @@ func queryMessages(chatID: Int64, contactID: String, limit: Int?, additionalMess
         baseQuery += " LIMIT \(messageLimit)"
     }
 
+    // Add query execution time logging
+    let startTime = CFAbsoluteTimeGetCurrent()
     guard let messageRows = executeSQLQuery(dbPath: chatDBPath, query: baseQuery, parameters: [contactName, chatID]) else {
         print("No messages found.")
         return
     }
+    let queryTime = CFAbsoluteTimeGetCurrent() - startTime
+    print("Message query execution time: \(String(format: "%.2f", queryTime)) seconds")
 
+    // Start timing message processing
+    let processStartTime = CFAbsoluteTimeGetCurrent()
+    
     var messages: [Message] = []
 
-    // Process messages from the database
+    // Process messages from the database using parallel processing
+    let group = DispatchGroup()
+    let queue = DispatchQueue(label: "com.messages.processing", attributes: .concurrent)
+    let syncQueue = DispatchQueue(label: "com.messages.sync")
+    
     for msg in messageRows {
-        guard let isFromMe = msg["is_from_me"] as? Int64,
-              let messageDate = msg["message_date"] as? String else { continue }
+        group.enter()
+        queue.async {
+            if let isFromMe = msg["is_from_me"] as? Int64,
+               let messageDate = msg["message_date"] as? String {
 
-        var content: String?
+                var content: String?
 
-        if let attributedBodyData = msg["attributedBody"] as? Data {
-            content = decodeAttributedBody(data: attributedBodyData)
-        } else if let text = msg["text"] as? String {
-            content = text
+                if let attributedBodyData = msg["attributedBody"] as? Data {
+                    content = decodeAttributedBody(data: attributedBodyData)
+                } else if let text = msg["text"] as? String {
+                    content = text
+                }
+
+                if let messageContent = content {
+                    let sender = isFromMe == 1 ? "Me" : contactName
+                    let message = Message(messageDate: messageDate, sender: sender, content: messageContent)
+                    syncQueue.async {
+                        messages.append(message)
+                    }
+                }
+            }
+            group.leave()
         }
-
-        guard let messageContent = content else { continue }
-
-        let sender = isFromMe == 1 ? "Me" : contactName
-        let message = Message(messageDate: messageDate, sender: sender, content: messageContent)
-        messages.append(message)
     }
-
+    
+    group.wait()
+    
     // Add the additional messages, if any
     if let extraMessages = additionalMessages {
         messages.insert(contentsOf: extraMessages, at: 0)
     }
+
+    let processTime = CFAbsoluteTimeGetCurrent() - processStartTime
+    print("Message processing time: \(String(format: "%.2f", processTime)) seconds")
+    let totalTime = queryTime + processTime
+    print("Total execution time: \(String(format: "%.2f", totalTime)) seconds")
 
     // Now, format and print the messages
     var formattedOutput = ""
     print("\nMessages with \(contactName):")
     print(String(repeating: "-", count: 50))
 
-    for message in messages {
+    for message in messages.sorted(by: { $0.messageDate < $1.messageDate }) {
         let formattedMessage = "\(message.messageDate) - \(message.sender): \(message.content)\n"
         formattedOutput += formattedMessage
         print(formattedMessage, terminator: "")
