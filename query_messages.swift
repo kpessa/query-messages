@@ -76,8 +76,7 @@ func executeSQLQuery(dbPath: String, query: String, parameters: [Any] = []) -> [
     return results
 }
 
-// Function to get available chats
-func getAvailableChats() -> [(chatID: Int64, contactID: String, messageCount: Int64, lastMessageDate: String, contactName: String?)] {
+func getAvailableChatsGroupedByContact() -> [String: [(chatID: Int64, contactID: String, messageCount: Int64, lastMessageDate: String)]] {
     let query = """
     SELECT
         c.ROWID AS chat_id,
@@ -104,12 +103,12 @@ func getAvailableChats() -> [(chatID: Int64, contactID: String, messageCount: In
     // Add query execution time logging
     let startTime = CFAbsoluteTimeGetCurrent()
     guard let results = executeSQLQuery(dbPath: chatDBPath, query: query) else {
-        return []
+        return [:]
     }
     let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
     print("Query execution time: \(String(format: "%.2f", timeElapsed)) seconds")
 
-    var chats: [(chatID: Int64, contactID: String, messageCount: Int64, lastMessageDate: String, contactName: String?)] = []
+    var chatsGroupedByContact: [String: [(chatID: Int64, contactID: String, messageCount: Int64, lastMessageDate: String)]] = [:]
     
     // Process results using a dispatch group for parallel processing
     let group = DispatchGroup()
@@ -124,13 +123,16 @@ func getAvailableChats() -> [(chatID: Int64, contactID: String, messageCount: In
                let message_count = row["message_count"] as? Int64,
                let last_message_date = row["last_message_date"] as? Int64 {
 
-                let contactName = getContactName(phoneNumber: handle_id)
+                let contactName = getContactName(phoneNumber: handle_id) ?? handle_id
                 let dateInSeconds = Double(last_message_date) / 1000000000 + 978307200
                 let date = Date(timeIntervalSince1970: dateInSeconds)
                 let formattedDate = dateFormatter.string(from: date)
 
                 syncQueue.async {
-                    chats.append((chat_id, handle_id, message_count, formattedDate, contactName))
+                    if chatsGroupedByContact[contactName] == nil {
+                        chatsGroupedByContact[contactName] = []
+                    }
+                    chatsGroupedByContact[contactName]?.append((chat_id, handle_id, message_count, formattedDate))
                 }
             }
             group.leave()
@@ -140,7 +142,7 @@ func getAvailableChats() -> [(chatID: Int64, contactID: String, messageCount: In
     // Wait for all processing to complete
     group.wait()
 
-    return chats.sorted { $0.lastMessageDate > $1.lastMessageDate }
+    return chatsGroupedByContact
 }
 
 // Add this helper function to improve date formatting performance
@@ -205,30 +207,77 @@ func getContactName(phoneNumber: String) -> String? {
     return contactName
 }
 
-// Function to decode attributed body
+// Define a Message struct to hold the message data
+struct Message {
+    let messageDate: String
+    let sender: String
+    let content: String
+}
+
+// Function to decode attributed body using NSUnarchiver
 func decodeAttributedBody(data: Data) -> String? {
-    if let unarchiver = NSUnarchiver(forReadingWith: data) {
-        if let attributedString = unarchiver.decodeObject() as? NSAttributedString {
-            return attributedString.string
-        }
+    // Attempt to decode using NSUnarchiver
+    if let attributedString = NSUnarchiver.unarchiveObject(with: data) as? NSAttributedString {
+        return attributedString.string
     }
 
+    // Fallback to plain text decoding
     if let plainText = String(data: data, encoding: .utf8) {
         return plainText
     }
 
-    let nsStringMarker = "NSString".data(using: .ascii)!
-    if let range = data.range(of: nsStringMarker) {
-        let startIndex = range.upperBound + 3
-        if startIndex < data.count {
-            let textData = data.suffix(from: startIndex)
-            if let text = String(data: textData, encoding: .utf8) {
-                return text.components(separatedBy: .controlCharacters).joined()
+    // Additional decoding attempts can be added here if needed
+
+    return nil
+}
+
+// Function to fetch messages for a specific chat
+func fetchMessagesForChat(chatID: Int64, contactID: String) -> [Message]? {
+    let contactName = getContactName(phoneNumber: contactID) ?? contactID
+
+    let query = """
+    SELECT
+        m.ROWID AS message_id,
+        m.date,
+        datetime(m.date / 1000000000 + 978307200, 'unixepoch', 'localtime') AS message_date,
+        CASE m.is_from_me WHEN 1 THEN 'Me' ELSE ? END AS sender,
+        m.text,
+        m.attributedBody,
+        m.is_from_me
+    FROM message m
+    JOIN chat_message_join cmj ON m.ROWID = cmj.message_id
+    WHERE cmj.chat_id = ?
+    ORDER BY m.date ASC
+    """
+
+    guard let messageRows = executeSQLQuery(dbPath: chatDBPath, query: query, parameters: [contactName, chatID]) else {
+        print("No messages found for chat ID \(chatID).")
+        return nil
+    }
+
+    var messages: [Message] = []
+
+    for msg in messageRows {
+        if let isFromMe = msg["is_from_me"] as? Int64,
+           let messageDate = msg["message_date"] as? String {
+
+            var content: String?
+
+            if let attributedBodyData = msg["attributedBody"] as? Data {
+                content = decodeAttributedBody(data: attributedBodyData)
+            } else if let text = msg["text"] as? String {
+                content = text
+            }
+
+            if let messageContent = content {
+                let sender = isFromMe == 1 ? "Me" : contactName
+                let message = Message(messageDate: messageDate, sender: sender, content: messageContent)
+                messages.append(message)
             }
         }
     }
 
-    return nil
+    return messages
 }
 
 // Function to parse reaction type
@@ -250,13 +299,6 @@ func parseReactionType(text: String?) -> String? {
         }
     }
     return "[reaction]"
-}
-
-// Define a Message struct to hold the message data
-struct Message {
-    let messageDate: String
-    let sender: String
-    let content: String
 }
 
 // Modify the queryMessages function
@@ -359,58 +401,67 @@ func queryMessages(chatID: Int64, contactID: String, limit: Int?, additionalMess
 
 func main() {
     let args = CommandLine.arguments
-
     var searchContact: String? = nil
 
-    // Check if a contact name or phone number is passed as an argument
     if args.count > 1 {
-        searchContact = args[1] // The first argument is the executable name, so use the second one
+        searchContact = args[1]
         print("Searching for contact: \(searchContact!)")
     }
 
-    let chats = getAvailableChats()
+    let chatsGrouped = getAvailableChatsGroupedByContact()
 
-    if chats.isEmpty {
+    if chatsGrouped.isEmpty {
         print("No chats found or unable to access the database.")
         return
     }
 
-    // Declare filteredChats
-    var filteredChats: [(Int64, String, Int64, String, String?)] = []
+    // Aggregate chats per contact
+    var aggregatedChats: [(contactName: String, contactID: String, totalMessages: Int64, lastMessageDate: String)] = []
 
-    // Filter chats based on searchContact
-    if let searchContact = searchContact {
-        filteredChats = chats.filter {
-            let (_, contactID, _, _, contactName) = $0
-            return contactID.lowercased().contains(searchContact.lowercased()) ||
-                   (contactName?.lowercased().contains(searchContact.lowercased()) ?? false)
-        }
-    } else {
-        filteredChats = chats
+    for (contactName, chats) in chatsGrouped {
+        let totalMessages = chats.reduce(0) { $0 + $1.messageCount }
+        // Find the most recent last message date
+        let lastMessageDate = chats.map { $0.lastMessageDate }.max() ?? ""
+
+        // Since contactID can be different (e.g., in group chats), we can pick the most common one or the first one
+        let contactID = chats.first?.contactID ?? ""
+
+        aggregatedChats.append((
+            contactName: contactName,
+            contactID: contactID,
+            totalMessages: totalMessages,
+            lastMessageDate: lastMessageDate
+        ))
     }
 
-    if filteredChats.isEmpty {
+    // Filter based on search contact
+    if let searchContact = searchContact?.lowercased() {
+        aggregatedChats = aggregatedChats.filter { chat in
+            chat.contactName.lowercased().contains(searchContact) ||
+            chat.contactID.lowercased().contains(searchContact)
+        }
+    }
+
+    if aggregatedChats.isEmpty {
         print("No chats found for the specified contact.")
         return
     }
 
+    // Sort chats by lastMessageDate descending
+    aggregatedChats.sort { $0.lastMessageDate > $1.lastMessageDate }
+
     // Display available chats
     print("\nAvailable chats:")
     print(String(repeating: "-", count: 50))
-    for (index, chat) in filteredChats.enumerated() {
-        let (_, contactID, count, lastMessageDate, name) = chat
-        if let name = name {
-            print("\(index + 1). \(name) (\(contactID)) - \(count) messages - Last message on \(lastMessageDate)")
-        } else {
-            print("\(index + 1). \(contactID) - \(count) messages - Last message on \(lastMessageDate)")
-        }
+    for (index, chat) in aggregatedChats.enumerated() {
+        print("\(index + 1). \(chat.contactName) (\(chat.contactID)) - \(chat.totalMessages) messages - Last message on \(chat.lastMessageDate)")
     }
 
     // Get user selection
     var choice: Int?
     repeat {
         print("\nSelect a chat number: ", terminator: "")
-        if let input = readLine(), let num = Int(input), num > 0, num <= filteredChats.count {
+        if let input = readLine(), let num = Int(input), num > 0, num <= aggregatedChats.count {
             choice = num
         } else {
             print("Invalid selection. Please try again.")
@@ -434,12 +485,44 @@ func main() {
         }
     } while true
 
-    let selectedChat = filteredChats[choice! - 1]
-    let selectedChatID = selectedChat.0
-    let selectedContactID = selectedChat.1
-    let contactName = selectedChat.4 ?? selectedContactID // Use the contact name if available, otherwise use the contact ID
+    let selectedChat = aggregatedChats[choice! - 1]
 
-    queryMessages(chatID: selectedChatID, contactID: selectedContactID, limit: limit, additionalMessages: nil)
+    // Since a contact may have multiple chat IDs, we need to fetch all messages for all chats with this contact
+    let chatsForContact = chatsGrouped[selectedChat.contactName] ?? []
+    var allMessages: [Message] = []
+
+    for chat in chatsForContact {
+        // Fetch messages for each chat and aggregate them
+        if let messages = fetchMessagesForChat(chatID: chat.chatID, contactID: chat.contactID) {
+            allMessages.append(contentsOf: messages)
+        }
+    }
+
+    // Apply limit if needed
+    if let limit = limit {
+        allMessages = Array(allMessages.suffix(limit))
+    }
+
+    // Sort messages by date
+    allMessages.sort { $0.messageDate < $1.messageDate }
+
+    // Now, format and print the messages
+    var formattedOutput = ""
+    print("\nMessages with \(selectedChat.contactName):")
+    print(String(repeating: "-", count: 50))
+
+    for message in allMessages {
+        let formattedMessage = "\(message.messageDate) - \(message.sender): \(message.content)\n"
+        formattedOutput += formattedMessage
+        print(formattedMessage, terminator: "")
+    }
+
+    // Copy to clipboard
+    let pasteboard = NSPasteboard.general
+    pasteboard.clearContents()
+    pasteboard.setString(formattedOutput, forType: .string)
+    print("\nMessages copied to clipboard!")
 }
 
+// Call the main function
 main()
