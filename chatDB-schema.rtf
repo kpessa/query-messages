@@ -1,0 +1,3995 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2820
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 TimesNewRomanPSMT;\f1\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cspthree\c0\c0\c0;}
+\margl1440\margr1440\vieww14060\viewh14360\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs52 \cf2 T ables (20)\
+
+\fs26 Name Type Schema\
+
+\fs40 _\
+SqliteDatabase\
+Properties\
+
+\f1\fs26 CREATE TABLE\
+_\
+SqliteDatabaseProperties (key\
+TEXT, value TEXT, UNIQUE(key))\
+
+\f0 key TEXT "key" TEXT\
+value TEXT "value" TEXT\
+
+\fs40 attachment 
+\f1\fs26 CREATE TABLE attachment (ROWID\
+INTEGER PRIMARY KEY\
+AUTOINCREMENT, guid TEXT UNIQUE\
+NOT NULL, created\
+date INTEGER\
+_\
+DEFAULT 0, start\
+date INTEGER\
+_\
+DEFAULT 0, filename TEXT, uti\
+TEXT, mime\
+_\
+type TEXT,\
+transfer\
+state INTEGER DEFAULT\
+_\
+0, is\
+_\
+outgoing INTEGER DEFAULT\
+0, user\
+_\
+info BLOB,\
+transfer\
+_\
+name TEXT, total\
+_\
+bytes\
+INTEGER DEFAULT 0, is\
+sticker\
+_\
+INTEGER DEFAULT 0,\
+sticker\
+user\
+_\
+_\
+info BLOB,\
+attribution\
+_\
+info BLOB,\
+hide\
+attachment INTEGER DEFAULT\
+_\
+0, ck\
+_\
+sync\
+state INTEGER\
+_\
+DEFAULT 0,\
+ck\
+server\
+_\
+_\
+change\
+token\
+blob\
+_\
+_\
+BLOB, ck\
+record\
+_\
+_\
+id TEXT,\
+original\
+_guid TEXT UNIQUE NOT\
+NULL, is\
+_\
+commsafety_\
+sensitive\
+INTEGER DEFAULT 0,\
+emoji\
+_\
+image\
+content\
+identifier\
+_\
+_\
+TEXT DEFAULT NULL,\
+emoji\
+_\
+image\
+short\
+_\
+_\
+description\
+TEXT DEFAULT NULL)\
+
+\f0 ROWID INTEGER "ROWID" INTEGER\
+guid TEXT "guid" TEXT NOT NULL UNIQUE\
+created\
+date _\
+INTEGER "created\
+date" INTEGER DEFAULT 0\
+_\
+1Name Type Schema\
+start\
+date INTEGER "start\
+date" INTEGER DEFAULT 0\
+_\
+_\
+filename TEXT "filename" TEXT\
+uti TEXT "uti" TEXT\
+mime\
+_\
+type TEXT "mime\
+_\
+type" TEXT\
+transfer\
+state INTEGER "transfer\
+state" INTEGER DEFAULT 0\
+_\
+_\
+is\
+_\
+outgoing INTEGER "is\
+_\
+outgoing" INTEGER DEFAULT 0\
+user\
+info BLOB "user\
+_\
+_\
+info" BLOB\
+transfer\
+name TEXT "transfer\
+_\
+_\
+name" TEXT\
+total\
+_\
+bytes INTEGER "total\
+_\
+bytes" INTEGER DEFAULT 0\
+is\
+sticker INTEGER "is\
+sticker" INTEGER DEFAULT 0\
+_\
+_\
+sticker\
+user\
+info BLOB "sticker\
+user\
+_\
+_\
+_\
+_\
+info" BLOB\
+attribution\
+info BLOB "attribution\
+_\
+_\
+info" BLOB\
+hide\
+attachment INTEGER "hide\
+attachment" INTEGER DEFAULT 0\
+_\
+_\
+ck\
+sync\
+state INTEGER "ck\
+sync\
+state" INTEGER DEFAULT 0\
+_\
+_\
+_\
+_\
+ck\
+server\
+_\
+_\
+change\
+_\
+blob\
+token\
+BLOB "ck\
+server\
+_\
+_\
+change\
+token\
+_\
+_\
+blob" BLOB\
+_\
+ck\
+record\
+id TEXT "ck\
+record\
+_\
+_\
+_\
+_\
+id" TEXT\
+original\
+_guid TEXT "original\
+_guid" TEXT NOT NULL\
+UNIQUE\
+is\
+_\
+commsafety_\
+sensitive INTEGER "is\
+_\
+commsafety_\
+sensitive" INTEGER\
+DEFAULT 0\
+emoji\
+_\
+image\
+content\
+_\
+_\
+ntifier\
+ide\
+TEXT "emoji\
+_\
+image\
+content\
+_\
+_\
+DEFAULT NULL\
+identifier" TEXT\
+emoji\
+_\
+image\
+short\
+_\
+_\
+iption\
+descr\
+TEXT "emoji\
+_\
+image\
+short\
+_\
+_\
+description" TEXT\
+DEFAULT NULL\
+
+\fs40 chat 
+\f1\fs26 CREATE TABLE chat (ROWID\
+INTEGER PRIMARY KEY\
+AUTOINCREMENT, guid TEXT UNIQUE\
+NOT NULL, style INTEGER, state\
+INTEGER, account\
+_\
+id TEXT,\
+properties BLOB,\
+
+\f0 2Name Type Schema\
+
+\f1 chat\
+_\
+identifier TEXT,\
+service\
+_\
+name TEXT, room\
+name\
+_\
+TEXT, account\
+_\
+login TEXT,\
+is\
+_\
+archived INTEGER DEFAULT 0,\
+last\
+addressed\
+_\
+_\
+handle TEXT,\
+display_\
+name TEXT, group_\
+id\
+TEXT, is\
+filtered INTEGER\
+_\
+DEFAULT 0, successful\
+_query\
+INTEGER, engram\
+_\
+id TEXT,\
+server\
+_\
+change\
+_\
+token TEXT,\
+ck\
+_\
+sync\
+state INTEGER DEFAULT\
+_\
+0, original\
+_group_\
+id TEXT,\
+last\
+read\
+_\
+_\
+message\
+_\
+timestamp\
+INTEGER DEFAULT 0,\
+cloudkit\
+record\
+_\
+_\
+id TEXT,\
+last\
+addressed\
+sim\
+_\
+_\
+_\
+id TEXT,\
+is\
+blackholed INTEGER DEFAULT\
+_\
+0, syndication\
+date INTEGER\
+_\
+DEFAULT 0, syndication\
+_\
+type\
+INTEGER DEFAULT 0, is\
+recovered\
+_\
+INTEGER DEFAULT 0,\
+is\
+_\
+deleting_\
+incoming_\
+messages\
+INTEGER DEFAULT 0)\
+
+\f0 ROWID INTEGER "ROWID" INTEGER\
+guid TEXT "guid" TEXT NOT NULL UNIQUE\
+style INTEGER "style" INTEGER\
+state INTEGER "state" INTEGER\
+account\
+id TEXT "account\
+_\
+_\
+id" TEXT\
+properties BLOB "properties" BLOB\
+chat\
+identifier TEXT "chat\
+_\
+_\
+identifier" TEXT\
+service\
+name TEXT "service\
+_\
+_\
+name" TEXT\
+room\
+name TEXT "room\
+_\
+_\
+name" TEXT\
+account\
+_\
+login TEXT "account\
+_\
+login" TEXT\
+is\
+archived INTEGER "is\
+archived" INTEGER DEFAULT 0\
+_\
+_\
+3Name Type Schema\
+last\
+addressed\
+handle TEXT "last\
+addressed\
+_\
+_\
+_\
+_\
+handle" TEXT\
+display_\
+name TEXT "display_\
+name" TEXT\
+group_\
+id TEXT "group_\
+id" TEXT\
+is\
+filtered INTEGER "is\
+filtered" INTEGER DEFAULT 0\
+_\
+_\
+successful\
+_query INTEGER "successful\
+_query" INTEGER\
+engram\
+_\
+id TEXT "engram\
+_\
+id" TEXT\
+server\
+_\
+change\
+token TEXT "server\
+_\
+_\
+change\
+_\
+token" TEXT\
+ck\
+sync\
+state INTEGER "ck\
+sync\
+state" INTEGER DEFAULT 0\
+_\
+_\
+_\
+_\
+original\
+_group_\
+id TEXT "original\
+_group_\
+id" TEXT\
+last\
+read\
+_\
+_\
+message\
+_\
+stamp\
+time\
+INTEGER "last\
+read\
+_\
+_\
+message\
+_\
+timestamp"\
+INTEGER DEFAULT 0\
+cloudkit\
+record\
+id TEXT "cloudkit\
+record\
+_\
+_\
+_\
+_\
+id" TEXT\
+last\
+addressed\
+sim\
+id TEXT "last\
+addressed\
+sim\
+_\
+_\
+_\
+_\
+_\
+_\
+id" TEXT\
+is\
+blackholed INTEGER "is\
+blackholed" INTEGER DEFAULT 0\
+_\
+_\
+syndication\
+_\
+date INTEGER "syndication\
+date" INTEGER DEFAULT 0\
+_\
+syndication\
+_\
+type INTEGER "syndication\
+_\
+type" INTEGER DEFAULT 0\
+is\
+recovered INTEGER "is\
+recovered" INTEGER DEFAULT 0\
+_\
+_\
+is\
+_\
+deleting_\
+incoming_\
+me\
+ssages\
+INTEGER "is\
+_\
+deleting_\
+incoming_\
+messages"\
+INTEGER DEFAULT 0\
+
+\fs40 chat\
+handle\
+_\
+_joi\
+n\
+
+\f1\fs26 CREATE TABLE chat\
+handle\
+_\
+_join\
+(chat\
+id INTEGER REFERENCES\
+_\
+chat (ROWID) ON DELETE CASCADE,\
+handle\
+id INTEGER REFERENCES\
+_\
+handle (ROWID) ON DELETE\
+CASCADE, UNIQUE(chat\
+_\
+id,\
+handle\
+id))\
+_\
+
+\f0 chat\
+id INTEGER "chat\
+_\
+_\
+id" INTEGER\
+handle\
+id INTEGER "handle\
+id" INTEGER\
+_\
+_\
+
+\fs40 chat\
+_\
+message\
+_j\
+oin\
+
+\f1\fs26 CREATE TABLE chat\
+_\
+message\
+_join\
+(chat\
+id INTEGER REFERENCES\
+_\
+chat (ROWID) ON DELETE CASCADE,\
+
+\f0 4Name Type Schema\
+
+\f1 message\
+id INTEGER REFERENCES\
+_\
+message (ROWID) ON DELETE\
+CASCADE, message\
+date INTEGER\
+_\
+DEFAULT 0, PRIMARY KEY\
+(chat\
+_\
+id, message\
+id))\
+_\
+
+\f0 chat\
+id INTEGER "chat\
+_\
+_\
+id" INTEGER\
+message\
+_\
+id INTEGER "message\
+_\
+id" INTEGER\
+message\
+_\
+date INTEGER "message\
+date" INTEGER DEFAULT 0\
+_\
+
+\fs40 chat\
+recoverabl\
+_\
+e\
+_\
+message\
+_join\
+
+\f1\fs26 CREATE TABLE\
+chat\
+recoverable\
+_\
+_\
+message\
+_join\
+(chat\
+id INTEGER REFERENCES\
+_\
+chat (ROWID) ON DELETE CASCADE,\
+message\
+id INTEGER REFERENCES\
+_\
+message (ROWID) ON DELETE\
+CASCADE, delete\
+_\
+date INTEGER,\
+ck\
+_\
+sync\
+state INTEGER DEFAULT\
+_\
+0, PRIMARY KEY (chat\
+_\
+id,\
+message\
+_\
+id), CHECK (delete\
+date\
+_\
+!= 0))\
+
+\f0 chat\
+id INTEGER "chat\
+_\
+_\
+id" INTEGER\
+message\
+_\
+id INTEGER "message\
+_\
+id" INTEGER\
+delete\
+date INTEGER "delete\
+date" INTEGER\
+_\
+_\
+ck\
+_\
+sync\
+state INTEGER "ck\
+_\
+_\
+sync\
+_\
+state" INTEGER DEFAULT 0\
+
+\fs40 deleted\
+_\
+messag\
+es\
+
+\f1\fs26 CREATE TABLE deleted\
+_\
+messages\
+(ROWID INTEGER PRIMARY KEY\
+AUTOINCREMENT UNIQUE, guid TEXT\
+NOT NULL)\
+
+\f0 ROWID INTEGER "ROWID" INTEGER UNIQUE\
+guid TEXT "guid" TEXT NOT NULL\
+
+\fs40 handle 
+\f1\fs26 CREATE TABLE handle (ROWID\
+INTEGER PRIMARY KEY\
+AUTOINCREMENT UNIQUE, id TEXT\
+NOT NULL, country TEXT, service\
+TEXT NOT NULL,\
+
+\f0 5Name Type Schema\
+
+\f1 uncanonicalized\
+_\
+id TEXT,\
+person\
+centric\
+_\
+_\
+id TEXT, UNIQUE\
+(id, service) )\
+
+\f0 ROWID INTEGER "ROWID" INTEGER UNIQUE\
+id TEXT "id" TEXT NOT NULL\
+country TEXT "country" TEXT\
+service TEXT "service" TEXT NOT NULL\
+uncanonicalized\
+id TEXT "uncanonicalized\
+_\
+_\
+id" TEXT\
+person\
+centric\
+_\
+_\
+id TEXT "person\
+centric\
+id" TEXT\
+_\
+_\
+
+\fs40 kvtable 
+\f1\fs26 CREATE TABLE kvtable (ROWID\
+INTEGER PRIMARY KEY\
+AUTOINCREMENT UNIQUE, key TEXT\
+UNIQUE NOT NULL, value BLOB NOT\
+NULL)\
+
+\f0 ROWID INTEGER "ROWID" INTEGER UNIQUE\
+key TEXT "key" TEXT NOT NULL UNIQUE\
+value BLOB "value" BLOB NOT NULL\
+
+\fs40 message 
+\f1\fs26 CREATE TABLE message (ROWID\
+INTEGER PRIMARY KEY\
+AUTOINCREMENT, guid TEXT UNIQUE\
+NOT NULL, text TEXT, replace\
+INTEGER DEFAULT 0,\
+service\
+_\
+center TEXT, handle\
+id\
+_\
+INTEGER DEFAULT 0, subject\
+TEXT, country TEXT,\
+attributedBody BLOB, version\
+INTEGER DEFAULT 0, type INTEGER\
+DEFAULT 0, service TEXT,\
+account TEXT, account\
+_guid\
+TEXT, error INTEGER DEFAULT 0,\
+date INTEGER, date\
+read\
+_\
+INTEGER, date\
+delivered\
+_\
+INTEGER, is\
+delivered INTEGER\
+_\
+DEFAULT 0, is\
+finished INTEGER\
+_\
+DEFAULT 0, is\
+emote INTEGER\
+_\
+
+\f0 6Name Type Schema\
+
+\f1 DEFAULT 0, is\
+from\
+me INTEGER\
+_\
+_\
+DEFAULT 0, is\
+_\
+empty INTEGER\
+DEFAULT 0, is\
+_\
+delayed INTEGER\
+DEFAULT 0, is\
+auto\
+_\
+_\
+reply\
+INTEGER DEFAULT 0, is\
+_prepared\
+INTEGER DEFAULT 0, is\
+read\
+_\
+INTEGER DEFAULT 0,\
+is\
+_\
+system\
+_\
+message INTEGER\
+DEFAULT 0, is\
+sent INTEGER\
+_\
+DEFAULT 0, has\
+dd\
+results\
+_\
+_\
+INTEGER DEFAULT 0,\
+is\
+service\
+_\
+_\
+message INTEGER\
+DEFAULT 0, is\
+forward INTEGER\
+_\
+DEFAULT 0, was\
+_\
+downgraded\
+INTEGER DEFAULT 0, is\
+archive\
+_\
+INTEGER DEFAULT 0,\
+cache\
+has\
+attachments INTEGER\
+_\
+_\
+DEFAULT 0, cache\
+roomnames\
+_\
+TEXT, was\
+data\
+detected INTEGER\
+_\
+_\
+DEFAULT 0, was\
+_\
+deduplicated\
+INTEGER DEFAULT 0,\
+is\
+audio\
+_\
+_\
+message INTEGER\
+DEFAULT 0, is\
+_played INTEGER\
+DEFAULT 0, date\
+_played INTEGER,\
+item\
+_\
+type INTEGER DEFAULT 0,\
+other\
+_\
+handle INTEGER DEFAULT 0,\
+group_\
+title TEXT,\
+group_\
+action\
+_\
+type INTEGER\
+DEFAULT 0, share\
+status INTEGER\
+_\
+DEFAULT 0, share\
+direction\
+_\
+INTEGER DEFAULT 0, is\
+_\
+expirable\
+INTEGER DEFAULT 0, expire\
+state\
+_\
+INTEGER DEFAULT 0,\
+message\
+action\
+_\
+_\
+type INTEGER\
+DEFAULT 0, message\
+source\
+_\
+INTEGER DEFAULT 0,\
+associated\
+_\
+message\
+_guid TEXT,\
+associated\
+_\
+message\
+_\
+type INTEGER\
+DEFAULT 0, balloon\
+bundle\
+id\
+_\
+_\
+
+\f0 7Name Type Schema\
+
+\f1 TEXT, payload\
+_\
+data BLOB,\
+expressive\
+send\
+_\
+_\
+style\
+_\
+id TEXT,\
+associated\
+_\
+message\
+_\
+range\
+locati\
+_\
+on INTEGER DEFAULT 0,\
+associated\
+_\
+message\
+_\
+range\
+_\
+length\
+INTEGER DEFAULT 0,\
+time\
+_\
+expressive\
+send\
+_\
+_played\
+INTEGER, message\
+_\
+summary_\
+info\
+BLOB, ck\
+_\
+sync\
+state INTEGER\
+_\
+DEFAULT 0, ck\
+record\
+_\
+_\
+id TEXT,\
+ck\
+record\
+_\
+_\
+change\
+_\
+tag TEXT,\
+destination\
+caller\
+_\
+_\
+id TEXT,\
+is\
+_\
+corrupt INTEGER DEFAULT 0,\
+reply_\
+to\
+_guid TEXT, sort\
+id\
+_\
+INTEGER, is\
+_\
+spam INTEGER\
+DEFAULT 0, has\
+unseen\
+mention\
+_\
+_\
+INTEGER DEFAULT 0,\
+thread\
+_\
+originator\
+_guid TEXT,\
+thread\
+_\
+originator\
+_part TEXT,\
+syndication\
+_\
+ranges TEXT,\
+synced\
+_\
+syndication\
+_\
+ranges TEXT,\
+was\
+delivered\
+_\
+_quietly INTEGER\
+DEFAULT 0, did\
+_\
+notify_\
+recipient\
+INTEGER DEFAULT 0,\
+date\
+_\
+retracted INTEGER,\
+date\
+_\
+edited INTEGER,\
+was\
+detonated INTEGER DEFAULT\
+_\
+0, part\
+_\
+count INTEGER,\
+is\
+_\
+stewie INTEGER DEFAULT 0,\
+is\
+_\
+sos INTEGER DEFAULT 0,\
+is\
+_\
+critical INTEGER DEFAULT 0,\
+bia\
+reference\
+_\
+_\
+id TEXT,\
+is\
+kt\
+verified INTEGER DEFAULT\
+_\
+_\
+0, fallback\
+_\
+hash TEXT,\
+associated\
+_\
+message\
+_\
+emoji TEXT\
+DEFAULT NULL,\
+is\
+_pending_\
+satellite\
+send\
+_\
+INTEGER DEFAULT 0, needs\
+_\
+relay\
+INTEGER DEFAULT 0,\
+
+\f0 8Name Type Schema\
+
+\f1 schedule\
+_\
+type INTEGER DEFAULT\
+0, schedule\
+state INTEGER\
+_\
+DEFAULT 0,\
+sent\
+or\
+received\
+off\
+_\
+_\
+_\
+_grid\
+INTEGER DEFAULT 0)\
+
+\f0 ROWID INTEGER "ROWID" INTEGER\
+guid TEXT "guid" TEXT NOT NULL UNIQUE\
+text TEXT "text" TEXT\
+replace INTEGER "replace" INTEGER DEFAULT 0\
+service\
+center TEXT "service\
+_\
+_\
+center" TEXT\
+handle\
+id INTEGER "handle\
+id" INTEGER DEFAULT 0\
+_\
+_\
+subject TEXT "subject" TEXT\
+country TEXT "country" TEXT\
+attributedBody BLOB "attributedBody" BLOB\
+version INTEGER "version" INTEGER DEFAULT 0\
+type INTEGER "type" INTEGER DEFAULT 0\
+service TEXT "service" TEXT\
+account TEXT "account" TEXT\
+account\
+_guid TEXT "account\
+_guid" TEXT\
+error INTEGER "error" INTEGER DEFAULT 0\
+date INTEGER "date" INTEGER\
+date\
+read INTEGER "date\
+_\
+_\
+read" INTEGER\
+date\
+delivered INTEGER "date\
+delivered" INTEGER\
+_\
+_\
+is\
+delivered INTEGER "is\
+delivered" INTEGER DEFAULT 0\
+_\
+_\
+is\
+finished INTEGER "is\
+finished" INTEGER DEFAULT 0\
+_\
+_\
+is\
+emote INTEGER "is\
+emote" INTEGER DEFAULT 0\
+_\
+_\
+is\
+from\
+me INTEGER "is\
+from\
+me" INTEGER DEFAULT 0\
+_\
+_\
+_\
+_\
+is\
+_\
+empty INTEGER "is\
+_\
+empty" INTEGER DEFAULT 0\
+is\
+_\
+delayed INTEGER "is\
+_\
+delayed" INTEGER DEFAULT 0\
+is\
+auto\
+_\
+_\
+reply INTEGER "is\
+auto\
+_\
+_\
+reply" INTEGER DEFAULT 0\
+9Name Type Schema\
+is\
+_prepared INTEGER "is\
+_prepared" INTEGER DEFAULT 0\
+is\
+read INTEGER "is\
+read" INTEGER DEFAULT 0\
+_\
+_\
+is\
+_\
+system\
+_\
+message INTEGER "is\
+_\
+system\
+_\
+message" INTEGER\
+DEFAULT 0\
+is\
+sent INTEGER "is\
+sent" INTEGER DEFAULT 0\
+_\
+_\
+has\
+dd\
+results INTEGER "has\
+dd\
+results" INTEGER DEFAULT 0\
+_\
+_\
+_\
+_\
+is\
+service\
+_\
+_\
+message INTEGER "is\
+service\
+_\
+_\
+message" INTEGER\
+DEFAULT 0\
+is\
+forward INTEGER "is\
+forward" INTEGER DEFAULT 0\
+_\
+_\
+was\
+_\
+downgraded INTEGER "was\
+_\
+downgraded" INTEGER DEFAULT\
+0\
+is\
+archive INTEGER "is\
+archive" INTEGER DEFAULT 0\
+_\
+_\
+cache\
+has\
+attachments INTEGER "cache\
+has\
+_\
+_\
+_\
+_\
+DEFAULT 0\
+attachments" INTEGER\
+cache\
+roomnames TEXT "cache\
+roomnames" TEXT\
+_\
+_\
+was\
+data\
+detected INTEGER "was\
+data\
+_\
+_\
+_\
+_\
+DEFAULT 0\
+detected" INTEGER\
+was\
+_\
+deduplicated INTEGER "was\
+_\
+deduplicated" INTEGER DEFAULT\
+0\
+is\
+audio\
+_\
+_\
+message INTEGER "is\
+audio\
+_\
+_\
+message" INTEGER DEFAULT\
+0\
+is\
+_played INTEGER "is\
+_played" INTEGER DEFAULT 0\
+date\
+_played INTEGER "date\
+_played" INTEGER\
+item\
+_\
+type INTEGER "item\
+_\
+type" INTEGER DEFAULT 0\
+other\
+handle INTEGER "other\
+handle" INTEGER DEFAULT 0\
+_\
+_\
+group_\
+title TEXT "group_\
+title" TEXT\
+group_\
+action\
+_\
+type INTEGER "group_\
+action\
+_\
+type" INTEGER DEFAULT\
+0\
+share\
+status INTEGER "share\
+status" INTEGER DEFAULT 0\
+_\
+_\
+share\
+direction INTEGER "share\
+direction" INTEGER DEFAULT 0\
+_\
+_\
+is\
+_\
+expirable INTEGER "is\
+_\
+expirable" INTEGER DEFAULT 0\
+10Name Type Schema\
+expire\
+_\
+state INTEGER "expire\
+state" INTEGER DEFAULT 0\
+_\
+message\
+action\
+_\
+_\
+type INTEGER "message\
+action\
+_\
+_\
+type" INTEGER\
+DEFAULT 0\
+message\
+_\
+source INTEGER "message\
+source" INTEGER DEFAULT 0\
+_\
+associated\
+_\
+message\
+_gui\
+TEXT "associated\
+_\
+message\
+_guid" TEXT\
+d\
+associated\
+_\
+message\
+_\
+typ\
+e\
+INTEGER "associated\
+_\
+message\
+_\
+type" INTEGER\
+DEFAULT 0\
+balloon\
+bundle\
+id TEXT "balloon\
+bundle\
+_\
+_\
+_\
+_\
+id" TEXT\
+payload\
+_\
+data BLOB "payload\
+_\
+data" BLOB\
+expressive\
+send\
+_\
+_\
+style\
+_\
+id TEXT "expressive\
+send\
+_\
+_\
+style\
+_\
+id" TEXT\
+associated\
+_\
+message\
+ran\
+_\
+ge\
+location\
+_\
+INTEGER "associated\
+_\
+message\
+_\
+range\
+_\
+INTEGER DEFAULT 0\
+location"\
+associated\
+ge\
+_\
+length\
+_\
+message\
+ran\
+_\
+INTEGER "associated\
+_\
+message\
+_\
+range\
+_\
+INTEGER DEFAULT 0\
+length"\
+time\
+_\
+expressive\
+send\
+_\
+_pl\
+ayed\
+INTEGER "time\
+_\
+expressive\
+send\
+_\
+_played"\
+INTEGER\
+message\
+_\
+summary_\
+info BLOB "message\
+_\
+summary_\
+info" BLOB\
+ck\
+sync\
+state INTEGER "ck\
+sync\
+state" INTEGER DEFAULT 0\
+_\
+_\
+_\
+_\
+ck\
+record\
+id TEXT "ck\
+record\
+_\
+_\
+_\
+_\
+id" TEXT\
+ck\
+record\
+_\
+_\
+change\
+_\
+tag TEXT "ck\
+record\
+_\
+_\
+change\
+_\
+tag" TEXT\
+destination\
+caller\
+id TEXT "destination\
+caller\
+_\
+_\
+_\
+_\
+id" TEXT\
+is\
+_\
+corrupt INTEGER "is\
+_\
+corrupt" INTEGER DEFAULT 0\
+reply_\
+to\
+_guid TEXT "reply_\
+to\
+_guid" TEXT\
+sort\
+id INTEGER "sort\
+_\
+_\
+id" INTEGER\
+is\
+_\
+spam INTEGER "is\
+_\
+spam" INTEGER DEFAULT 0\
+has\
+unseen\
+mention INTEGER "has\
+unseen\
+_\
+_\
+_\
+_\
+DEFAULT 0\
+mention" INTEGER\
+thread\
+_\
+originator\
+_guid TEXT "thread\
+_\
+originator\
+_guid" TEXT\
+thread\
+_\
+originator\
+_part TEXT "thread\
+_\
+originator\
+_part" TEXT\
+11syndication\
+synced\
+es\
+Name Type Schema\
+_\
+ranges TEXT "syndication\
+_\
+ranges" TEXT\
+_\
+syndication\
+_\
+rang\
+TEXT "synced\
+_\
+syndication\
+_\
+ranges" TEXT\
+was\
+delivered\
+_\
+_quietly INTEGER "was\
+delivered\
+_\
+_quietly" INTEGER\
+DEFAULT 0\
+did\
+_\
+notify_\
+recipient INTEGER "did\
+_\
+notify_\
+recipient" INTEGER\
+DEFAULT 0\
+date\
+retracted INTEGER "date\
+retracted" INTEGER\
+_\
+_\
+date\
+edited INTEGER "date\
+edited" INTEGER\
+_\
+_\
+was\
+detonated INTEGER "was\
+detonated" INTEGER DEFAULT 0\
+_\
+_\
+part\
+_\
+count INTEGER "part\
+count" INTEGER\
+_\
+is\
+stewie INTEGER "is\
+stewie" INTEGER DEFAULT 0\
+_\
+_\
+is\
+sos INTEGER "is\
+sos" INTEGER DEFAULT 0\
+_\
+_\
+is\
+critical INTEGER "is\
+critical" INTEGER DEFAULT 0\
+_\
+_\
+bia\
+reference\
+id TEXT "bia\
+reference\
+_\
+_\
+_\
+_\
+id" TEXT\
+is\
+kt\
+verified INTEGER "is\
+kt\
+verified" INTEGER DEFAULT 0\
+_\
+_\
+_\
+_\
+fallback\
+hash TEXT "fallback\
+_\
+_\
+hash" TEXT\
+associated\
+oji\
+_\
+message\
+_\
+em\
+TEXT "associated\
+_\
+message\
+_\
+emoji" TEXT\
+DEFAULT NULL\
+is\
+_pending_\
+satellite\
+send INTEGER "is\
+_\
+_pending_\
+satellite\
+send" INTEGER\
+_\
+DEFAULT 0\
+needs\
+_\
+relay INTEGER "needs\
+_\
+relay" INTEGER DEFAULT 0\
+schedule\
+_\
+type INTEGER "schedule\
+_\
+type" INTEGER DEFAULT 0\
+schedule\
+state INTEGER "schedule\
+state" INTEGER DEFAULT 0\
+_\
+_\
+sent\
+d\
+or\
+received\
+off\
+_\
+_\
+_\
+_gri\
+INTEGER "sent\
+or\
+_\
+_\
+DEFAULT 0\
+received\
+off\
+_\
+_grid" INTEGER\
+
+\fs40 message\
+_\
+ment\
+_join\
+attach\
+
+\f1\fs26 CREATE TABLE\
+message\
+attachment\
+_\
+_join\
+(message\
+id INTEGER REFERENCES\
+_\
+message (ROWID) ON DELETE\
+CASCADE, attachment\
+id INTEGER\
+_\
+
+\f0 12Name Type Schema\
+
+\f1 REFERENCES attachment (ROWID)\
+ON DELETE CASCADE,\
+UNIQUE(message\
+_\
+id,\
+attachment\
+id))\
+_\
+
+\f0 message\
+_\
+id INTEGER "message\
+_\
+id" INTEGER\
+attachment\
+id INTEGER "attachment\
+_\
+id" INTEGER\
+_\
+
+\fs40 message\
+_proce\
+ssing_\
+task\
+
+\f1\fs26 CREATE TABLE\
+message\
+_processing_\
+task (ROWID\
+INTEGER PRIMARY KEY\
+AUTOINCREMENT UNIQUE, guid TEXT\
+NOT NULL, task\
+_\
+flags INTEGER\
+NOT NULL )\
+
+\f0 ROWID INTEGER "ROWID" INTEGER UNIQUE\
+guid TEXT "guid" TEXT NOT NULL\
+task\
+_\
+flags INTEGER "task\
+_\
+flags" INTEGER NOT NULL\
+
+\fs40 recoverable\
+me\
+_\
+ssage\
+_part\
+
+\f1\fs26 CREATE TABLE\
+recoverable\
+_\
+message\
+_part\
+(chat\
+id INTEGER REFERENCES\
+_\
+chat (ROWID) ON DELETE CASCADE,\
+message\
+id INTEGER REFERENCES\
+_\
+message (ROWID) ON DELETE\
+CASCADE, part\
+_\
+index INTEGER,\
+delete\
+_\
+date INTEGER, part\
+text\
+_\
+BLOB NOT NULL, ck\
+_\
+sync\
+state\
+_\
+INTEGER DEFAULT 0, PRIMARY KEY\
+(chat\
+_\
+id, message\
+_\
+id,\
+part\
+_\
+index), CHECK (delete\
+date\
+_\
+!= 0))\
+
+\f0 chat\
+id INTEGER "chat\
+_\
+_\
+id" INTEGER\
+message\
+_\
+id INTEGER "message\
+_\
+id" INTEGER\
+part\
+_\
+index INTEGER "part\
+index" INTEGER\
+_\
+delete\
+date INTEGER "delete\
+date" INTEGER\
+_\
+_\
+part\
+_\
+text BLOB "part\
+text" BLOB NOT NULL\
+_\
+ck\
+sync\
+state INTEGER "ck\
+sync\
+state" INTEGER DEFAULT 0\
+_\
+_\
+_\
+_\
+13Name Type Schema\
+
+\fs40 scheduled\
+mes\
+_\
+sages\
+_pending_\
+cloudkit\
+delete\
+
+\f1\fs26 CREATE TABLE\
+scheduled\
+_\
+messages\
+_pending_\
+clou\
+dkit\
+delete (ROWID INTEGER\
+_\
+PRIMARY KEY AUTOINCREMENT\
+
+\f0\fs40 _\
+
+\f1\fs26 UNIQUE, guid TEXT NOT NULL,\
+recordID TEXT )\
+
+\f0 ROWID INTEGER "ROWID" INTEGER UNIQUE\
+guid TEXT "guid" TEXT NOT NULL\
+recordID TEXT "recordID" TEXT\
+
+\fs40 sqlite\
+_\
+sequence 
+\f1\fs26 CREATE TABLE\
+sqlite\
+_\
+sequence(name,seq)\
+
+\f0 name "name"\
+seq "seq"\
+
+\fs40 sqlite\
+stat1 
+\f1\fs26 CREATE TABLE\
+
+\f0\fs40 _\
+
+\f1\fs26 sqlite\
+_\
+stat1(tbl,idx,stat)\
+
+\f0 tbl "tbl"\
+idx "idx"\
+stat "stat"\
+
+\fs40 sync\
+deleted\
+_\
+ttachments\
+a\
+_\
+
+\f1\fs26 CREATE TABLE\
+sync\
+deleted\
+attachments (ROWID\
+_\
+_\
+INTEGER PRIMARY KEY\
+AUTOINCREMENT UNIQUE, guid TEXT\
+NOT NULL, recordID TEXT )\
+
+\f0 ROWID INTEGER "ROWID" INTEGER UNIQUE\
+guid TEXT "guid" TEXT NOT NULL\
+recordID TEXT "recordID" TEXT\
+
+\fs40 sync\
+hats\
+deleted\
+c\
+_\
+_\
+
+\f1\fs26 CREATE TABLE sync\
+deleted\
+chats\
+_\
+_\
+(ROWID INTEGER PRIMARY KEY\
+AUTOINCREMENT UNIQUE, guid TEXT\
+NOT NULL, recordID\
+TEXT,timestamp INTEGER)\
+
+\f0 ROWID INTEGER "ROWID" INTEGER UNIQUE\
+guid TEXT "guid" TEXT NOT NULL\
+14Name Type Schema\
+recordID TEXT "recordID" TEXT\
+timestamp INTEGER "timestamp" INTEGER\
+
+\fs40 sync\
+deleted\
+m\
+_\
+_\
+essages\
+
+\f1\fs26 CREATE TABLE\
+sync\
+deleted\
+_\
+_\
+messages (ROWID\
+INTEGER PRIMARY KEY\
+AUTOINCREMENT UNIQUE, guid TEXT\
+NOT NULL, recordID TEXT )\
+
+\f0 ROWID INTEGER "ROWID" INTEGER UNIQUE\
+guid TEXT "guid" TEXT NOT NULL\
+recordID TEXT "recordID" TEXT\
+
+\fs40 unsynced\
+remo\
+_\
+ved\
+recoverable\
+_\
+_\
+messages\
+
+\f1\fs26 CREATE TABLE\
+unsynced\
+removed\
+recoverable\
+_\
+_\
+_\
+ssages (ROWID INTEGER PRIMARY\
+KEY AUTOINCREMENT UNIQUE,\
+chat\
+_guid TEXT NOT NULL,\
+message\
+_guid TEXT NOT NULL,\
+part\
+index INTEGER)\
+_\
+me\
+
+\f0 ROWID INTEGER "ROWID" INTEGER UNIQUE\
+chat\
+_guid TEXT "chat\
+_guid" TEXT NOT NULL\
+message\
+_guid TEXT "message\
+_guid" TEXT NOT NULL\
+part\
+_\
+index INTEGER "part\
+index" INTEGER\
+_\
+
+\fs52 Indices (32)\
+
+\fs26 Name Type Schema\
+
+\fs40 attachment\
+idx\
+_\
+is\
+sticker\
+
+\f1\fs26 CREATE INDEX\
+attachment\
+idx\
+_\
+attachment(is\
+is\
+sticker ON\
+_\
+_\
+sticker)\
+
+\f0\fs40 _\
+_\
+
+\f1\fs26 _\
+
+\f0 is\
+sticker "is\
+_\
+_\
+sticker"\
+
+\fs40 attachment\
+idx\
+_purged\
+_\
+ments\
+v2\
+_\
+attach\
+
+\f1\fs26 CREATE INDEX\
+attachment\
+idx\
+_\
+_purged\
+attachments\
+_\
+_\
+v2 ON\
+attachment(hide\
+_\
+attachment,ck\
+_\
+sync\
+
+\f0\fs40 _\
+
+\fs26 15Name Type Schema\
+
+\f1 _\
+state,transfer\
+state) WHERE\
+_\
+hide\
+attachment=0 AND\
+_\
+(ck\
+_\
+sync\
+state=1 OR\
+_\
+ck\
+_\
+sync\
+state=4) AND\
+_\
+transfer\
+state=0\
+_\
+
+\f0 hide\
+attachment "hide\
+_\
+_\
+attachment"\
+ck\
+_\
+sync\
+state "ck\
+_\
+_\
+sync\
+_\
+state"\
+transfer\
+state "transfer\
+_\
+_\
+state"\
+
+\fs40 chat\
+handle\
+_joi\
+n\
+_\
+idx\
+handle\
+id\
+_\
+_\
+_\
+
+\f1\fs26 CREATE INDEX\
+chat\
+handle\
+_\
+_join\
+idx\
+handle\
+_\
+_\
+chat\
+handle\
+_\
+_join(handle\
+id)\
+_\
+id ON\
+_\
+
+\f0 handle\
+id "handle\
+_\
+_\
+id"\
+
+\fs40 chat\
+idx\
+chat\
+i\
+_\
+dentifier\
+_\
+_\
+
+\f1\fs26 CREATE INDEX\
+chat\
+idx\
+_\
+_\
+chat(chat\
+chat\
+identifier ON\
+_\
+identifier)\
+_\
+
+\f0 chat\
+identifier "chat\
+_\
+identifier"\
+_\
+
+\fs40 chat\
+idx\
+chat\
+i\
+_\
+dentifier\
+_\
+_\
+servic\
+_\
+
+\f1\fs26 CREATE INDEX\
+chat\
+idx\
+chat\
+identifier\
+service\
+_\
+_\
+_\
+_\
+_\
+ame ON chat(chat\
+_\
+identifier,\
+service\
+name)\
+n\
+
+\f0\fs40 e\
+name\
+
+\f1\fs26 _\
+
+\f0\fs40 _\
+
+\fs26 chat\
+identifier "chat\
+_\
+_\
+identifier"\
+service\
+name "service\
+_\
+_\
+name"\
+
+\fs40 chat\
+idx\
+chat\
+r\
+_\
+_\
+_\
+oom\
+name\
+ser\
+_\
+_\
+
+\f1\fs26 CREATE INDEX\
+chat\
+idx\
+chat\
+_\
+_\
+_\
+me ON chat(room\
+_\
+service\
+name)\
+room\
+name\
+service\
+_\
+_\
+_\
+name,\
+na\
+
+\f0\fs40 vice\
+name\
+
+\f1\fs26 _\
+
+\f0\fs40 _\
+
+\fs26 room\
+name "room\
+_\
+name"\
+_\
+service\
+name "service\
+_\
+_\
+name"\
+
+\fs40 chat\
+idx\
+_\
+_group\
+
+\f1\fs26 CREATE INDEX chat\
+idx\
+_\
+_group_\
+id ON\
+chat(group_\
+id)\
+
+\f0\fs40 id\
+_\
+
+\fs26 group_\
+id "group_\
+id"\
+16Name Type Schema\
+
+\fs40 chat\
+idx\
+is\
+arc\
+_\
+_\
+_\
+
+\f1\fs26 CREATE INDEX chat\
+idx\
+is\
+_\
+_\
+_\
+ON chat(is\
+archived)\
+archived\
+
+\f0\fs40 hived\
+
+\f1\fs26 _\
+
+\f0 is\
+archived "is\
+archived"\
+_\
+_\
+
+\fs40 chat\
+oin\
+_\
+message\
+_j\
+idx\
+chat\
+id\
+_\
+_\
+_\
+
+\f1\fs26 CREATE INDEX\
+chat\
+_\
+message\
+_join\
+idx\
+_\
+_\
+chat\
+_\
+message\
+_join(chat\
+_\
+chat\
+id)\
+id ON\
+_\
+
+\f0 chat\
+_\
+id "chat\
+_\
+id"\
+
+\fs40 chat\
+oin\
+_\
+message\
+_j\
+idx\
+e\
+_\
+date\
+_\
+_\
+_\
+id\
+_\
+messag\
+id\
+chat\
+
+\f1\fs26 CREATE INDEX\
+chat\
+_\
+message\
+_join\
+idx\
+_\
+_\
+message\
+_\
+id\
+chat\
+id ON\
+_\
+_\
+_\
+chat\
+_\
+message\
+_join(chat\
+_\
+id,\
+message\
+_\
+date, message\
+id)\
+_\
+date\
+
+\f0\fs40 _\
+
+\fs26 chat\
+id "chat\
+id"\
+_\
+_\
+message\
+_\
+date "message\
+date"\
+_\
+message\
+_\
+id "message\
+id"\
+_\
+
+\fs40 chat\
+oin\
+_\
+message\
+_j\
+idx\
+_\
+id\
+_\
+messag\
+only\
+
+\f1\fs26 CREATE INDEX\
+chat\
+_\
+message\
+_join\
+idx\
+_\
+_\
+message\
+id\
+_\
+_\
+nly ON\
+chat\
+_\
+message\
+_join(message\
+_\
+id)\
+o\
+
+\f0\fs40 e\
+_\
+_\
+
+\fs26 message\
+_\
+id "message\
+id"\
+_\
+
+\fs40 chat\
+recoverabl\
+_\
+e\
+_\
+message\
+_join\
+id\
+_\
+message\
+_\
+_\
+id\
+
+\f1\fs26 CREATE INDEX\
+chat\
+recoverable\
+_\
+age\
+id\
+idx ON\
+_\
+_\
+chat\
+recoverable\
+_\
+age\
+id)\
+_\
+_\
+message\
+_join\
+_\
+mess\
+_\
+message\
+_join(mess\
+
+\f0\fs40 x\
+
+\fs26 message\
+_\
+id "message\
+id"\
+_\
+
+\fs40 message\
+attach\
+_\
+ment\
+_join\
+idx\
+_\
+_\
+
+\f1\fs26 CREATE INDEX\
+message\
+attachment\
+_\
+_join\
+idx\
+attach\
+_\
+_\
+ment\
+id ON\
+_\
+message\
+attachment\
+_\
+_join(attachment\
+
+\f0 17
+\fs40 attachment\
+
+\fs26 Name Type Schema\
+
+\fs40 id
+\f1\fs26 _\
+id)\
+
+\f0\fs40 _\
+
+\fs26 attachment\
+id "attachment\
+_\
+id"\
+_\
+
+\fs40 message\
+_\
+ment\
+_join\
+_\
+message\
+_\
+id\
+attach\
+idx\
+_\
+
+\f1\fs26 CREATE INDEX\
+message\
+attachment\
+_\
+_join\
+idx\
+_\
+_\
+messag\
+e\
+id ON\
+_\
+message\
+attachment\
+_\
+_join(message\
+_\
+id\
+)\
+
+\f0 message\
+_\
+id "message\
+_\
+id"\
+
+\fs40 message\
+_\
+ssociated\
+idx\
+a\
+_\
+mess\
+_\
+
+\f1\fs26 CREATE INDEX\
+message\
+idx\
+associated\
+_\
+_\
+_\
+message ON\
+message(associated\
+_\
+message\
+_guid)\
+
+\f0\fs40 age\
+
+\fs26 associated\
+_\
+message\
+_gui\
+"associated\
+_\
+message\
+_guid"\
+d\
+
+\fs40 message\
+_\
+ache\
+has\
+idx\
+c\
+_\
+attac\
+_\
+hments\
+_\
+
+\f1\fs26 CREATE INDEX\
+message\
+idx\
+cache\
+_\
+_\
+ON message(cache\
+has\
+_\
+has\
+_\
+_\
+attachments\
+_\
+attachments)\
+
+\f0 cache\
+has\
+attachments "cache\
+has\
+_\
+_\
+_\
+_\
+attachments"\
+
+\fs40 message\
+idx\
+_\
+_\
+ate\
+d\
+
+\f1\fs26 CREATE INDEX message\
+idx\
+_\
+_\
+message(date)\
+date ON\
+
+\f0 date "date"\
+
+\fs40 message\
+_\
+xpire\
+state\
+_\
+idx\
+e\
+_\
+
+\f1\fs26 CREATE INDEX\
+message\
+idx\
+_\
+_\
+expire\
+_\
+message(expire\
+state)\
+_\
+state ON\
+
+\f0 expire\
+_\
+state "expire\
+_\
+state"\
+
+\fs40 message\
+idx\
+_\
+_\
+iled\
+fa\
+
+\f1\fs26 CREATE INDEX message\
+idx\
+_\
+message(is\
+finished, is\
+_\
+_\
+_\
+failed ON\
+_\
+from\
+me,\
+error)\
+
+\f0 is\
+finished "is\
+_\
+_\
+finished"\
+18Name Type Schema\
+is\
+from\
+me "is\
+from\
+_\
+_\
+_\
+_\
+me"\
+error "error"\
+
+\fs40 message\
+idx\
+_\
+_\
+andle\
+h\
+
+\f1\fs26 CREATE INDEX message\
+idx\
+_\
+_\
+message(handle\
+_\
+id, date)\
+handle ON\
+
+\f0 handle\
+id "handle\
+id"\
+_\
+_\
+date "date"\
+
+\fs40 message\
+idx\
+_\
+_\
+andle\
+id\
+h\
+
+\f1\fs26 CREATE INDEX message\
+idx\
+handle\
+_\
+_\
+_\
+ON message(handle\
+id)\
+_\
+id\
+
+\f0\fs40 _\
+
+\fs26 handle\
+id "handle\
+_\
+_\
+id"\
+
+\fs40 message\
+idx\
+is\
+_\
+_\
+Read\
+isFromMe\
+_\
+_\
+itemType\
+
+\f1\fs26 CREATE INDEX\
+message\
+idx\
+isRead\
+_\
+_\
+pe ON message(is\
+_\
+isFromMe\
+_\
+read, is\
+_\
+_\
+itemTy\
+from\
+me,\
+_\
+item\
+_\
+type)\
+
+\f0 is\
+read "is\
+read"\
+_\
+_\
+is\
+from\
+me "is\
+from\
+_\
+_\
+_\
+_\
+me"\
+item\
+_\
+type "item\
+_\
+type"\
+
+\fs40 message\
+idx\
+is\
+_\
+_\
+_pending_\
+satell\
+ite\
+_\
+message\
+
+\f1\fs26 CREATE INDEX\
+message\
+idx\
+is\
+_\
+_\
+_pending_\
+satellite\
+m\
+_\
+essage ON\
+message(is\
+_pending_\
+satellite\
+WHERE is\
+_pending_\
+satellite\
+send)\
+_\
+send=1\
+_\
+
+\f0 is\
+_pending_\
+satellite\
+send "is\
+_\
+_pending_\
+satellite\
+_\
+send"\
+
+\fs40 message\
+idx\
+_\
+_\
+read\
+is\
+
+\f1\fs26 CREATE INDEX message\
+_\
+ON message(is\
+_\
+read, is\
+idx\
+is\
+_\
+_\
+from\
+_\
+_\
+is\
+finished)\
+read\
+me,\
+
+\f0\fs40 _\
+
+\f1\fs26 _\
+
+\f0 is\
+read "is\
+read"\
+_\
+_\
+is\
+from\
+me "is\
+from\
+_\
+_\
+_\
+_\
+me"\
+is\
+_\
+finished "is\
+_\
+finished"\
+
+\fs40 message\
+idx\
+is 
+\f1\fs26 CREATE INDEX\
+
+\f0\fs40 _\
+_\
+
+\fs26 19Name Type Schema\
+
+\fs40 _\
+scheduled\
+_\
+me\
+ssage\
+
+\f1\fs26 message\
+idx\
+is\
+scheduled\
+_\
+_\
+_\
+_\
+message\
+ON message(schedule\
+_\
+type) WHERE\
+schedule\
+_\
+type=2\
+
+\f0 schedule\
+_\
+type "schedule\
+_\
+type"\
+
+\fs40 message\
+_\
+sent\
+is\
+idx\
+is\
+_\
+from\
+_\
+_\
+_\
+_\
+
+\f1\fs26 CREATE INDEX\
+message\
+idx\
+is\
+_\
+_\
+_\
+or ON message(is\
+sent\
+is\
+from\
+me\
+err\
+_\
+_\
+_\
+_\
+sent, is\
+from\
+me,\
+_\
+_\
+_\
+error)\
+
+\f0\fs40 me\
+error\
+_\
+
+\fs26 is\
+_\
+sent "is\
+sent"\
+_\
+is\
+from\
+me "is\
+from\
+me"\
+_\
+_\
+_\
+_\
+error "error"\
+
+\fs40 message\
+idx\
+_\
+_\
+her\
+handle\
+ot\
+_\
+
+\f1\fs26 CREATE INDEX\
+message\
+idx\
+_\
+_\
+message(other\
+_\
+other\
+handle ON\
+_\
+handle)\
+
+\f0 other\
+handle "other\
+handle"\
+_\
+_\
+
+\fs40 message\
+_\
+chedule\
+idx\
+s\
+_\
+state\
+_\
+
+\f1\fs26 CREATE INDEX\
+message\
+idx\
+schedule\
+_\
+_\
+_\
+message(schedule\
+state)\
+_\
+state ON\
+
+\f0 schedule\
+state "schedule\
+state"\
+_\
+_\
+
+\fs40 message\
+idx\
+th\
+_\
+_\
+read\
+_\
+originator\
+_\
+
+\f1\fs26 CREATE INDEX\
+message\
+idx\
+thread\
+_\
+_\
+_\
+originator\
+_guid\
+ON message(thread\
+_\
+originator\
+_guid)\
+
+\f0\fs40 guid\
+
+\fs26 thread\
+_\
+originator\
+_guid "thread\
+_\
+originator\
+_guid"\
+
+\fs40 message\
+_\
+ndelivered\
+idx\
+u\
+_\
+one\
+to\
+_\
+_\
+one\
+_\
+_\
+imessag\
+e\
+
+\f1\fs26 CREATE INDEX\
+message\
+idx\
+undelivered\
+_\
+_\
+one\
+to\
+one\
+_\
+_\
+_\
+_\
+imessage ON\
+message(cache\
+_\
+roomnames,service,is\
+_\
+sent,is\
+_\
+delivered,was\
+_\
+downgraded,\
+item\
+_\
+type) where cache\
+roomnames\
+_\
+IS NULL AND service IN\
+('iMessage'\
+,\
+'RCS') AND is\
+sent = 1\
+_\
+AND is\
+delivered = 0 AND\
+_\
+
+\f0 20Name Type Schema\
+
+\f1 was\
+_\
+downgraded = 0 AND item\
+_\
+== 0 AND schedule\
+_\
+type == 0\
+type\
+
+\f0 cache\
+roomnames "cache\
+roomnames"\
+_\
+_\
+service "service"\
+is\
+sent "is\
+sent"\
+_\
+_\
+is\
+delivered "is\
+delivered"\
+_\
+_\
+was\
+_\
+downgraded "was\
+_\
+downgraded"\
+item\
+_\
+type "item\
+_\
+type"\
+
+\fs40 message\
+idx\
+w\
+_\
+_\
+as\
+_\
+downgraded\
+
+\f1\fs26 CREATE INDEX\
+message\
+idx\
+was\
+_\
+_\
+_\
+downgraded ON\
+message(was\
+_\
+downgraded)\
+
+\f0 was\
+_\
+downgraded "was\
+_\
+downgraded"\
+
+\fs40 message\
+_proce\
+ssing_\
+task\
+idx\
+_\
+_\
+guid\
+task\
+_\
+_\
+flags\
+
+\f1\fs26 CREATE INDEX\
+message\
+_processing_\
+task\
+idx\
+_\
+_guid\
+_\
+ask\
+_\
+flags ON\
+message\
+_processing_\
+task(guid,\
+task\
+_\
+flags)\
+t\
+
+\f0 guid "guid"\
+task\
+_\
+flags "task\
+_\
+flags"\
+
+\fs52 Views (0)\
+
+\fs26 Name Type Schema\
+
+\fs52 Triggers (17)\
+
+\fs26 Name Type Schema\
+
+\fs40 add\
+to\
+deleted\
+_\
+_\
+_\
+messages\
+
+\f1\fs26 CREATE TRIGGER\
+add\
+to\
+deleted\
+_\
+_\
+_\
+messages AFTER\
+DELETE ON message BEGIN INSERT\
+INTO deleted\
+_\
+messages (guid)\
+VALUES (OLD.guid); END\
+CREATE TRIGGER\
+
+\f0 21Name Type Schema\
+
+\fs40 add\
+_\
+leted\
+to\
+_\
+sync\
+de\
+_\
+attachme\
+_\
+nts\
+add\
+to\
+sync\
+de\
+_\
+_\
+_\
+leted\
+_\
+messages\
+after\
+delete\
+on\
+_\
+attachment\
+_\
+_\
+after\
+delete\
+on\
+_\
+_\
+chat\
+_\
+after\
+delete\
+on\
+_\
+chat\
+_\
+handle\
+_\
+_j\
+_\
+oin\
+
+\f1\fs26 add\
+to\
+_\
+_\
+sync\
+deleted\
+attachments\
+_\
+_\
+AFTER DELETE ON attachment BEGIN\
+INSERT INTO\
+sync\
+deleted\
+_\
+_\
+attachments (guid,\
+recordID) VALUES (OLD.guid,\
+OLD.ck\
+record\
+_\
+_\
+id); END\
+CREATE TRIGGER\
+add\
+to\
+_\
+_\
+sync\
+deleted\
+_\
+_\
+messages AFTER\
+DELETE ON message BEGIN INSERT\
+INTO sync\
+deleted\
+_\
+_\
+messages (guid,\
+recordID) VALUES (OLD.guid,\
+OLD.ck\
+record\
+_\
+_\
+id); END\
+CREATE TRIGGER\
+after\
+delete\
+on\
+attachment AFTER\
+_\
+_\
+_\
+DELETE ON attachment BEGIN SELECT\
+delete\
+attachment\
+_\
+_path(OLD.filenam\
+e); END\
+CREATE TRIGGER\
+after\
+delete\
+on\
+chat AFTER DELETE\
+_\
+_\
+_\
+ON chat BEGIN DELETE FROM\
+chat\
+_\
+message\
+_join WHERE chat\
+id =\
+_\
+OLD.ROWID; END\
+CREATE TRIGGER\
+after\
+delete\
+on\
+chat\
+handle\
+_\
+_\
+_\
+_\
+_join\
+AFTER DELETE ON chat\
+handle\
+_\
+_join\
+BEGIN DELETE FROM handle WHERE\
+handle.ROWID = OLD.handle\
+id AND\
+_\
+(SELECT 1 from chat\
+handle\
+_\
+_join\
+WHERE handle\
+id = OLD.handle\
+id\
+_\
+_\
+LIMIT 1) IS NULL AND (SELECT 1\
+from message WHERE handle\
+id =\
+_\
+OLD.handle\
+id LIMIT 1) IS NULL AND\
+_\
+(SELECT 1 from message WHERE\
+other\
+handle = OLD.handle\
+id LIMIT\
+_\
+_\
+1) IS NULL; END\
+
+\f0\fs40 after\
+delete\
+_\
+_\
+on 
+\f1\fs26 CREATE TRIGGER\
+after\
+delete\
+on\
+chat\
+_\
+_\
+_\
+_\
+message\
+_join\
+
+\f0 22Name Type Schema\
+
+\fs40 chat\
+_\
+message\
+_\
+_join\
+after\
+delete\
+on\
+_\
+_\
+chat\
+recovera\
+_\
+ble\
+_\
+_\
+message\
+_jo\
+in\
+
+\f1\fs26 AFTER DELETE ON chat\
+_\
+message\
+_join\
+BEGIN UPDATE message SET\
+cache\
+roomnames = ( SELECT\
+_\
+group_\
+concat(c.room\
+name) FROM\
+_\
+chat c INNER JOIN\
+chat\
+_\
+message\
+_join j ON c.ROWID =\
+j.chat\
+_\
+id WHERE j.message\
+id =\
+_\
+OLD.message\
+id ) WHERE\
+_\
+message.ROWID = OLD.message\
+_\
+id;\
+DELETE FROM message WHERE\
+message.ROWID = OLD.message\
+id AND\
+_\
+OLD.message\
+id NOT IN (SELECT\
+_\
+chat\
+_\
+message\
+_join.message\
+id from\
+_\
+chat\
+_\
+message\
+_join WHERE\
+chat\
+_\
+message\
+_join.message\
+id =\
+_\
+OLD.message\
+id LIMIT 1) AND\
+_\
+OLD.message\
+id NOT IN (SELECT\
+_\
+chat\
+recoverable\
+_\
+_\
+message\
+_join.mess\
+age\
+id from\
+_\
+chat\
+recoverable\
+_\
+_\
+message\
+_join\
+WHERE\
+chat\
+age\
+recoverable\
+_\
+_\
+message\
+_join.mess\
+_\
+id = OLD.message\
+_\
+id LIMIT 1);\
+END\
+CREATE TRIGGER\
+after\
+delete\
+on\
+chat\
+recoverable\
+m\
+_\
+_\
+_\
+_\
+_\
+essage\
+_join AFTER DELETE ON\
+chat\
+recoverable\
+_\
+_\
+message\
+_join\
+BEGIN UPDATE message SET\
+cache\
+roomnames = ( SELECT\
+_\
+group_\
+concat(c.room\
+name) FROM\
+_\
+chat c INNER JOIN\
+chat\
+_\
+message\
+_join j ON c.ROWID =\
+j.chat\
+_\
+id WHERE j.message\
+id =\
+_\
+OLD.message\
+id ) WHERE\
+_\
+message.ROWID = OLD.message\
+_\
+id;\
+DELETE FROM message WHERE\
+message.ROWID = OLD.message\
+id AND\
+_\
+OLD.message\
+id NOT IN (SELECT\
+_\
+
+\f0 23Name Type Schema\
+
+\fs40 after\
+delete\
+on\
+_\
+_\
+_\
+message\
+after\
+delete\
+on\
+_\
+_\
+attac\
+_\
+message\
+_\
+hment\
+_join\
+after\
+delete\
+on\
+_\
+_\
+_\
+message\
+_plugi\
+
+\f1\fs26 chat\
+_\
+message\
+_join.message\
+id from\
+_\
+chat\
+_\
+message\
+_join WHERE\
+chat\
+_\
+message\
+_join.message\
+id =\
+_\
+OLD.message\
+id LIMIT 1) AND\
+_\
+OLD.message\
+id NOT IN (SELECT\
+_\
+chat\
+recoverable\
+_\
+_\
+message\
+_join.mess\
+age\
+id from\
+_\
+chat\
+recoverable\
+_\
+_\
+message\
+_join\
+WHERE\
+chat\
+age\
+recoverable\
+_\
+_\
+message\
+_join.mess\
+_\
+id = OLD.message\
+_\
+id LIMIT 1);\
+END\
+CREATE TRIGGER\
+after\
+delete\
+on\
+_\
+_\
+_\
+message AFTER\
+DELETE ON message BEGIN DELETE\
+FROM handle WHERE handle.ROWID =\
+OLD.handle\
+id AND (SELECT 1 from\
+_\
+chat\
+handle\
+_\
+_join WHERE handle\
+id =\
+_\
+OLD.handle\
+id LIMIT 1) IS NULL AND\
+_\
+(SELECT 1 from message WHERE\
+handle\
+id = OLD.handle\
+id LIMIT 1)\
+_\
+_\
+IS NULL AND (SELECT 1 from message\
+WHERE other\
+handle = OLD.handle\
+id\
+_\
+_\
+LIMIT 1) IS NULL; END\
+CREATE TRIGGER\
+after\
+delete\
+on\
+_\
+_\
+_\
+message\
+attachment\
+_\
+_join AFTER DELETE ON\
+message\
+attachment\
+_\
+_join BEGIN\
+DELETE FROM attachment WHERE\
+attachment.ROWID =\
+OLD.attachment\
+id AND (SELECT 1\
+_\
+from message\
+attachment\
+_\
+_join WHERE\
+attachment\
+id = OLD.attachment\
+id\
+_\
+_\
+LIMIT 1) IS NULL; END\
+CREATE TRIGGER\
+after\
+delete\
+on\
+_\
+_\
+_\
+message\
+_plugin\
+AFTER DELETE ON message WHEN\
+OLD.balloon\
+bundle\
+id IS NOT NULL\
+_\
+_\
+
+\f0 24Name Type Schema\
+
+\fs40 n 
+\f1\fs26 BEGIN SELECT\
+after\
+delete\
+_\
+_\
+message\
+_plugin(OLD.RO\
+WID, OLD.guid); END\
+
+\f0\fs40 after\
+insert\
+on\
+_\
+_\
+chat\
+_\
+message\
+_\
+_join\
+after\
+insert\
+on\
+_\
+_\
+attac\
+_\
+message\
+_\
+hment\
+_join\
+before\
+delete\
+o\
+n\
+_\
+attachment\
+_\
+_\
+delete\
+associat\
+_\
+ed\
+_\
+messages\
+_\
+fter\
+delete\
+on\
+a\
+_\
+_\
+_\
+message\
+
+\f1\fs26 CREATE TRIGGER\
+after\
+insert\
+on\
+chat\
+_\
+_\
+_\
+_\
+message\
+_join\
+AFTER INSERT ON chat\
+_\
+message\
+_join\
+BEGIN UPDATE message SET\
+cache\
+roomnames = ( SELECT\
+_\
+group_\
+concat(c.room\
+name) FROM\
+_\
+chat c INNER JOIN\
+chat\
+_\
+message\
+_join j ON c.ROWID =\
+j.chat\
+_\
+id WHERE j.message\
+id =\
+_\
+NEW.message\
+id ) WHERE\
+_\
+message.ROWID = NEW.message\
+_\
+id;\
+END\
+CREATE TRIGGER\
+after\
+insert\
+on\
+_\
+_\
+_\
+message\
+attachment\
+_\
+_join AFTER INSERT ON\
+message\
+attachment\
+_\
+_join BEGIN\
+UPDATE message SET\
+cache\
+has\
+attachments = 1 WHERE\
+_\
+_\
+message.ROWID = NEW.message\
+_\
+id;\
+END\
+CREATE TRIGGER\
+before\
+delete\
+on\
+attachment BEFORE\
+_\
+_\
+_\
+DELETE ON attachment BEGIN SELECT\
+before\
+delete\
+attachment\
+_\
+_\
+_path(OLD.\
+ROWID, OLD.guid); END\
+CREATE TRIGGER\
+delete\
+associated\
+_\
+_\
+messages\
+after\
+d\
+_\
+_\
+elete\
+on\
+_\
+_\
+message AFTER DELETE ON\
+message BEGIN DELETE FROM message\
+WHERE (OLD.associated\
+_\
+message\
+_guid\
+IS NULL AND\
+associated\
+_\
+message\
+_guid IS NOT\
+NULL AND guid =\
+OLD.associated\
+_\
+message\
+_guid); END\
+
+\f0 25Name Type Schema\
+
+\fs40 update\
+last\
+_\
+_\
+ed\
+_\
+message\
+_\
+fail\
+da\
+te\
+update\
+_\
+messag\
+e\
+date\
+after\
+_\
+_\
+up\
+_\
+date\
+on\
+messa\
+_\
+_\
+ge\
+
+\f1\fs26 CREATE TRIGGER\
+update\
+last\
+failed\
+_\
+_\
+_\
+message\
+date\
+_\
+AFTER UPDATE OF error ON message\
+WHEN NEW.error != 0 AND NEW.date >\
+COALESCE((SELECT value FROM\
+kvtable WHERE key =\
+'lastFailedMessageDate'), 0) BEGIN\
+INSERT OR REPLACE INTO kvtable\
+(key, value) VALUES\
+('lastFailedMessageDate'\
+,\
+NEW.date); INSERT OR REPLACE INTO\
+kvtable (key, value) VALUES\
+('lastFailedMessageRowID'\
+,\
+NEW.rowID); END\
+CREATE TRIGGER\
+update\
+_\
+message\
+date\
+after\
+_\
+_\
+_\
+update\
+o\
+_\
+n\
+_\
+message AFTER UPDATE OF date ON\
+message BEGIN UPDATE\
+chat\
+_\
+message\
+_join SET message\
+date\
+_\
+= NEW.date WHERE message\
+id =\
+_\
+NEW.ROWID AND message\
+date !=\
+_\
+NEW.date; END\
+
+\f0 26}
