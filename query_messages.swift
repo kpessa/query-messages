@@ -604,22 +604,47 @@ func main() {
 
     // Fetch messages for the selected chat
     if let messages = fetchMessagesForChat(chatID: selectedChat.chatID, participants: selectedChat.participants, limit: limit) {
-        // Now, format and print the messages
         var formattedOutput = ""
         print("\nMessages:")
         print(String(repeating: "-", count: 50))
 
-        for message in messages {
-            let formattedMessage = "\(message.messageDate) - \(message.sender): \(message.content)\n"
-            formattedOutput += formattedMessage
-            print(formattedMessage, terminator: "")
+        // Sort messages by date
+        let sortedMessages = messages.sorted { $0.messageDate < $1.messageDate }
+        
+        // Display logic for terminal output
+        if sortedMessages.count > 10 {
+            // Display first 5 messages
+            for message in sortedMessages.prefix(5) {
+                let formattedMessage = "\(message.messageDate) - \(message.sender): \(message.content)\n"
+                print(formattedMessage, terminator: "")
+            }
+            
+            // Add ellipsis to show hidden messages
+            print("\n... \(sortedMessages.count - 10) more messages ...\n")
+            
+            // Display last 5 messages
+            for message in sortedMessages.suffix(5) {
+                let formattedMessage = "\(message.messageDate) - \(message.sender): \(message.content)\n"
+                print(formattedMessage, terminator: "")
+            }
+        } else {
+            // If 10 or fewer messages, display all
+            for message in sortedMessages {
+                let formattedMessage = "\(message.messageDate) - \(message.sender): \(message.content)\n"
+                print(formattedMessage, terminator: "")
+            }
         }
+
+        // Format all messages for clipboard
+        formattedOutput = sortedMessages.map { 
+            "\($0.messageDate) - \($0.sender): \($0.content)\n" 
+        }.joined()
 
         // Copy to clipboard
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(formattedOutput, forType: .string)
-        print("\nMessages copied to clipboard!")
+        print("\nAll messages copied to clipboard!")
     } else {
         print("No messages found for the selected chat.")
     }
