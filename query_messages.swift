@@ -11,6 +11,65 @@ let chatDBPath = NSHomeDirectory() + "/Library/Messages/chat.db"
 // Add this at the top of the file with other global variables
 let contactNameCache = NSCache<NSString, NSString>()
 
+// Add this struct near the top of the file with other structs/types
+struct ExternalMessage {
+    let date: Date
+    let sender: String
+    let content: String
+    
+    static func parse(from line: String) -> ExternalMessage? {
+        // Expected format: "YYYY-MM-DD HH:mm:ss - Sender: Message"
+        let components = line.components(separatedBy: " - ")
+        guard components.count >= 2 else { return nil }
+        
+        let dateString = components[0]
+        let remainingText = components[1]
+        
+        // Split sender and content
+        let senderContentComponents = remainingText.components(separatedBy: ": ")
+        guard senderContentComponents.count >= 2 else { return nil }
+        
+        let sender = senderContentComponents[0]
+        let content = senderContentComponents[1...].joined(separator: ": ")
+        
+        // Parse date
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        
+        guard let date = dateFormatter.date(from: dateString) else { return nil }
+        
+        return ExternalMessage(date: date, sender: sender, content: content)
+    }
+}
+
+// Add this function to load external messages
+func loadExternalMessages(from path: String) -> [Message]? {
+    guard let content = try? String(contentsOfFile: path, encoding: .utf8) else {
+        print("Could not read external file at path: \(path)")
+        return nil
+    }
+    
+    let lines = content.components(separatedBy: .newlines)
+    var messages: [Message] = []
+    
+    for line in lines where !line.trimmingCharacters(in: .whitespaces).isEmpty {
+        if let externalMessage = ExternalMessage.parse(from: line) {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            let messageDate = dateFormatter.string(from: externalMessage.date)
+            
+            let message = Message(
+                messageDate: messageDate,
+                sender: externalMessage.sender,
+                content: externalMessage.content
+            )
+            messages.append(message)
+        }
+    }
+    
+    return messages
+}
+
 // Helper function to execute a SQL query
 func executeSQLQuery(dbPath: String, query: String, parameters: [Any] = []) -> [[String: Any]]? {
     var db: OpaquePointer?
@@ -335,7 +394,7 @@ func getParticipantsForChat(chatID: Int64) -> [String] {
 }
 
 // Updated fetchMessagesForChat function
-func fetchMessagesForChat(chatID: Int64, participants: [String], limit: Int?) -> [Message]? {
+func fetchMessagesForChat(chatID: Int64, participants: [String], limit: Int?, additionalMessages: [Message]?) -> [Message]? {
     let query = """
     SELECT
         m.ROWID AS message_id,
@@ -389,6 +448,11 @@ func fetchMessagesForChat(chatID: Int64, participants: [String], limit: Int?) ->
                 messages.append(message)
             }
         }
+    }
+
+    // Add the additional messages, if any
+    if let extraMessages = additionalMessages {
+        messages.insert(contentsOf: extraMessages, at: 0)
     }
 
     return messages
@@ -516,10 +580,33 @@ func queryMessages(chatID: Int64, contactID: String, limit: Int?, additionalMess
 func main() {
     let args = CommandLine.arguments
     var searchContact: String? = nil
+    var externalFilePath: String? = nil
 
-    if args.count > 1 {
-        searchContact = args[1]
-        print("Searching for contact: \(searchContact!)")
+    // Parse command line arguments
+    var i = 1
+    while i < args.count {
+        switch args[i] {
+        case "-f", "--file":
+            if i + 1 < args.count {
+                externalFilePath = args[i + 1]
+                i += 2
+            } else {
+                print("Error: Missing file path after -f/--file")
+                return
+            }
+        default:
+            searchContact = args[i]
+            i += 1
+        }
+    }
+
+    // Load external messages if specified
+    var externalMessages: [Message]? = nil
+    if let filePath = externalFilePath {
+        externalMessages = loadExternalMessages(from: filePath)
+        if externalMessages == nil {
+            print("Warning: Failed to load external messages")
+        }
     }
 
     let availableChats = getAvailableChats()
@@ -603,7 +690,7 @@ func main() {
     let selectedChat = displayChats.first { $0.index == choice! }!.chat
 
     // Fetch messages for the selected chat
-    if let messages = fetchMessagesForChat(chatID: selectedChat.chatID, participants: selectedChat.participants, limit: limit) {
+    if let messages = fetchMessagesForChat(chatID: selectedChat.chatID, participants: selectedChat.participants, limit: limit, additionalMessages: externalMessages) {
         var formattedOutput = ""
         print("\nMessages:")
         print(String(repeating: "-", count: 50))
