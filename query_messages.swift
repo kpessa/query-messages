@@ -231,8 +231,20 @@ func decodeAttributedBody(data: Data) -> String? {
     }
 
     // Fallback to NSUnarchiver for non-keyed archives
-    if let attributedString = deprecated_unarchiver(data: data) {
-        return attributedString.string
+    let legacyResult: String? = {
+        @available(macOS, deprecated: 10.13)
+        func deprecatedUnarchive() -> String? {
+            // Using NSUnarchiver as a fallback for older data formats
+            if let attributedString = NSUnarchiver.unarchiveObject(with: data) as? NSAttributedString {
+                return attributedString.string
+            }
+            return nil
+        }
+        return deprecatedUnarchive()
+    }()
+    
+    if let result = legacyResult {
+        return result
     }
 
     // Fallback to plain text decoding
@@ -243,17 +255,8 @@ func decodeAttributedBody(data: Data) -> String? {
     return nil
 }
 
-// Suppress deprecation warning for NSUnarchiver
-@available(macOS, deprecated: 10.13)
-func deprecated_unarchiver(data: Data) -> NSAttributedString? {
-    if let attributedString = NSUnarchiver.unarchiveObject(with: data) as? NSAttributedString {
-        return attributedString
-    }
-    return nil
-}
-
 // Function to get available chats with participants
-func getAvailableChats() -> [(chatID: Int64, participants: [String], messageCount: Int64, lastMessageDate: String)] {
+func getAvailableChats() -> [(chatID: Int64, participants: [String], messageCount: Int64, lastMessageDate: String, lastMessageDateRaw: Int64)] {
     let query = """
     SELECT
         c.ROWID AS chat_id,
@@ -271,7 +274,6 @@ func getAvailableChats() -> [(chatID: Int64, participants: [String], messageCoun
         FROM chat_message_join cmj 
         WHERE cmj.chat_id = c.ROWID
     )
-    ORDER BY last_message_date DESC
     """
 
     // Execute the query
@@ -279,7 +281,7 @@ func getAvailableChats() -> [(chatID: Int64, participants: [String], messageCoun
         return []
     }
 
-    var availableChats: [(chatID: Int64, participants: [String], messageCount: Int64, lastMessageDate: String)] = []
+    var availableChats: [(chatID: Int64, participants: [String], messageCount: Int64, lastMessageDate: String, lastMessageDateRaw: Int64)] = []
 
     for row in results {
         if let chat_id = row["chat_id"] as? Int64,
@@ -297,7 +299,8 @@ func getAvailableChats() -> [(chatID: Int64, participants: [String], messageCoun
                 chatID: chat_id,
                 participants: participants,
                 messageCount: message_count,
-                lastMessageDate: formattedDate
+                lastMessageDate: formattedDate,
+                lastMessageDateRaw: last_message_date
             ))
         }
     }
@@ -528,7 +531,6 @@ func main() {
 
     // Filter based on search contact
     var filteredChats = availableChats
-
     if let searchContact = searchContact?.lowercased() {
         filteredChats = availableChats.filter { chat in
             chat.participants.contains(where: { $0.lowercased().contains(searchContact) })
@@ -540,22 +542,41 @@ func main() {
         return
     }
 
-    // Sort chats by lastMessageDate descending
-    filteredChats.sort { $0.lastMessageDate > $1.lastMessageDate }
+    // Get most recent chats
+    let recentChats = filteredChats
+        .sorted { $0.lastMessageDateRaw > $1.lastMessageDateRaw }
+        .prefix(10)
 
-    // Display available chats
-    print("\nAvailable chats:")
+    // Get most active chats
+    let activeChats = filteredChats
+        .sorted { $0.messageCount > $1.messageCount }
+        .prefix(10)
+
+    // Create a combined list (allowing duplicates)
+    var displayChats: [(index: Int, chat: (chatID: Int64, participants: [String], messageCount: Int64, lastMessageDate: String, lastMessageDateRaw: Int64))] = []
+
+    print("\nMost Recent Chats:")
     print(String(repeating: "-", count: 50))
-    for (index, chat) in filteredChats.enumerated() {
+    for (index, chat) in recentChats.enumerated() {
+        displayChats.append((index + 1, chat))
         let participantList = chat.participants.joined(separator: ", ")
-        print("\(index + 1). Participants: \(participantList) - \(chat.messageCount) messages - Last message on \(chat.lastMessageDate)")
+        print("\(index + 1). \(participantList) - \(chat.messageCount) messages - Last message on \(chat.lastMessageDate)")
+    }
+
+    print("\nMost Active Chats:")
+    print(String(repeating: "-", count: 50))
+    for (_, chat) in activeChats.enumerated() {
+        let displayIndex = displayChats.count + 1
+        displayChats.append((displayIndex, chat))
+        let participantList = chat.participants.joined(separator: ", ")
+        print("\(displayIndex). \(participantList) - \(chat.messageCount) messages - Last message on \(chat.lastMessageDate)")
     }
 
     // Get user selection
     var choice: Int?
     repeat {
         print("\nSelect a chat number: ", terminator: "")
-        if let input = readLine(), let num = Int(input), num > 0, num <= filteredChats.count {
+        if let input = readLine(), let num = Int(input), num > 0, num <= displayChats.count {
             choice = num
         } else {
             print("Invalid selection. Please try again.")
@@ -567,7 +588,7 @@ func main() {
     repeat {
         print("How many recent messages to show? (type 'all' for entire history): ", terminator: "")
         if let input = readLine()?.lowercased() {
-            if input == "all" {
+            if input == "all" || input == "" {
                 limit = nil
                 break
             } else if let num = Int(input), num > 0 {
@@ -579,7 +600,7 @@ func main() {
         }
     } while true
 
-    let selectedChat = filteredChats[choice! - 1]
+    let selectedChat = displayChats.first { $0.index == choice! }!.chat
 
     // Fetch messages for the selected chat
     if let messages = fetchMessagesForChat(chatID: selectedChat.chatID, participants: selectedChat.participants, limit: limit) {
