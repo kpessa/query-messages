@@ -408,7 +408,7 @@ func fetchMessagesForChat(chatID: Int64, participants: [String], limit: Int?, ad
     LEFT JOIN handle h ON m.handle_id = h.ROWID
     JOIN chat_message_join cmj ON m.ROWID = cmj.message_id
     WHERE cmj.chat_id = ?
-    ORDER BY m.date ASC
+    ORDER BY m.date DESC
     """
 
     var finalQuery = query
@@ -695,35 +695,26 @@ func main() {
         print("\nMessages:")
         print(String(repeating: "-", count: 50))
 
-        // Sort messages by date
+        // Sort messages by date (oldest to newest for display)
         let sortedMessages = messages.sorted { $0.messageDate < $1.messageDate }
         
         // Display logic for terminal output
-        if sortedMessages.count > 10 {
-            // Display first 5 messages
-            for message in sortedMessages.prefix(5) {
-                let formattedMessage = "\(message.messageDate) - \(message.sender): \(message.content)\n"
-                print(formattedMessage, terminator: "")
-            }
-            
-            // Add ellipsis to show hidden messages
-            print("\n... \(sortedMessages.count - 10) more messages ...\n")
-            
-            // Display last 5 messages
-            for message in sortedMessages.suffix(5) {
+        if let limit = limit, sortedMessages.count > limit {
+            // Display only the last N messages
+            for message in sortedMessages.suffix(limit) {
                 let formattedMessage = "\(message.messageDate) - \(message.sender): \(message.content)\n"
                 print(formattedMessage, terminator: "")
             }
         } else {
-            // If 10 or fewer messages, display all
+            // If no limit or fewer messages than limit, display all
             for message in sortedMessages {
                 let formattedMessage = "\(message.messageDate) - \(message.sender): \(message.content)\n"
                 print(formattedMessage, terminator: "")
             }
         }
 
-        // Format all messages for clipboard
-        formattedOutput = sortedMessages.map { 
+        // Format all displayed messages for clipboard
+        formattedOutput = sortedMessages.suffix(limit ?? sortedMessages.count).map { 
             "\($0.messageDate) - \($0.sender): \($0.content)\n" 
         }.joined()
 
@@ -731,7 +722,7 @@ func main() {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(formattedOutput, forType: .string)
-        print("\nAll messages copied to clipboard!")
+        print("\nMessages copied to clipboard!")
     } else {
         print("No messages found for the selected chat.")
     }
