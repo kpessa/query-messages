@@ -8,6 +8,46 @@ import Contacts
 // Paths to databases
 let chatDBPath = NSHomeDirectory() + "/Library/Messages/chat.db"
 
+// Define the path for the cache file
+let cacheFilePath = "./contactNameCache.plist"
+
+// Function to save the cache to a file
+func saveCacheToFile(_ cache: [String: (chatID: Int64, participants: [String], messageCount: Int64, lastMessageDate: String, lastMessageDateRaw: Int64)]) {
+    let cacheArray = cache.map { (key, value) in
+        return [
+            "key": key,
+            "chatID": value.chatID,
+            "participants": value.participants,
+            "messageCount": value.messageCount,
+            "lastMessageDate": value.lastMessageDate,
+            "lastMessageDateRaw": value.lastMessageDateRaw
+        ] as [String: Any]
+    }
+    (cacheArray as NSArray).write(toFile: cacheFilePath, atomically: true)
+}
+
+// Function to load the cache from a file
+func loadCacheFromFile() -> [String: (chatID: Int64, participants: [String], messageCount: Int64, lastMessageDate: String, lastMessageDateRaw: Int64)] {
+    guard let cacheArray = NSArray(contentsOfFile: cacheFilePath) as? [[String: Any]] else {
+        return [:]
+    }
+    
+    var cache: [String: (chatID: Int64, participants: [String], messageCount: Int64, lastMessageDate: String, lastMessageDateRaw: Int64)] = [:]
+    
+    for item in cacheArray {
+        if let key = item["key"] as? String,
+           let chatID = item["chatID"] as? Int64,
+           let participants = item["participants"] as? [String],
+           let messageCount = item["messageCount"] as? Int64,
+           let lastMessageDate = item["lastMessageDate"] as? String,
+           let lastMessageDateRaw = item["lastMessageDateRaw"] as? Int64 {
+            cache[key] = (chatID, participants, messageCount, lastMessageDate, lastMessageDateRaw)
+        }
+    }
+    
+    return cache
+}
+
 // Add this at the top of the file with other global variables
 let contactNameCache = NSCache<NSString, NSString>()
 
@@ -609,6 +649,9 @@ func main() {
         }
     }
 
+    // Load the cached contact names
+    var contactNameCache = loadCacheFromFile()
+
     let availableChats = getAvailableChats()
 
     if availableChats.isEmpty {
@@ -620,12 +663,26 @@ func main() {
     var filteredChats = availableChats
     if let searchContact = searchContact?.lowercased() {
         filteredChats = availableChats.filter { chat in
-            chat.participants.contains(where: { $0.lowercased().contains(searchContact) })
+            let match = chat.participants.contains(where: { $0.lowercased().contains(searchContact) })
+            if match {
+                contactNameCache[chat.participants.joined(separator: ", ").lowercased()] = chat
+            }
+            return match
         }
     }
 
+    // Save the updated cache
+    saveCacheToFile(contactNameCache)
+
     if filteredChats.isEmpty {
         print("No chats found for the specified contact.")
+        return
+    }
+
+    // Check for one-to-one match
+    if filteredChats.count == 1, let singleMatch = filteredChats.first {
+        print("One-to-one match found for contact: \(singleMatch.participants.joined(separator: ", "))")
+        fetchAndDisplayMessages(for: singleMatch, externalMessages: externalMessages)
         return
     }
 
@@ -670,6 +727,13 @@ func main() {
         }
     } while choice == nil
 
+    let selectedChat = displayChats.first { $0.index == choice! }!.chat
+
+    // Fetch messages for the selected chat
+    fetchAndDisplayMessages(for: selectedChat, externalMessages: externalMessages)
+}
+
+func fetchAndDisplayMessages(for chat: (chatID: Int64, participants: [String], messageCount: Int64, lastMessageDate: String, lastMessageDateRaw: Int64), externalMessages: [Message]?) {
     // Get message limit
     var limit: Int?
     repeat {
@@ -687,10 +751,7 @@ func main() {
         }
     } while true
 
-    let selectedChat = displayChats.first { $0.index == choice! }!.chat
-
-    // Fetch messages for the selected chat
-    if let messages = fetchMessagesForChat(chatID: selectedChat.chatID, participants: selectedChat.participants, limit: limit, additionalMessages: externalMessages) {
+    if let messages = fetchMessagesForChat(chatID: chat.chatID, participants: chat.participants, limit: limit, additionalMessages: externalMessages) {
         var formattedOutput = ""
         print("\nMessages:")
         print(String(repeating: "-", count: 50))
