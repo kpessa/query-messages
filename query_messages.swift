@@ -325,22 +325,26 @@ func decodeAttributedBody(data: Data) -> String? {
             }
         } catch {
             // Handle error
-            print("Failed to decode attributed body: \(error)")
+            // print("Failed to decode attributed body: \(error)")
         }
     }
 
     // Fallback to NSUnarchiver for non-keyed archives
+    
     let legacyResult: String? = {
-        @available(macOS, deprecated: 10.13)
+        @available(macOS, deprecated: 10.13, message: "Using NSUnarchiver for legacy support.")
         func deprecatedUnarchive() -> String? {
             // Using NSUnarchiver as a fallback for older data formats
             if let attributedString = NSUnarchiver.unarchiveObject(with: data) as? NSAttributedString {
                 return attributedString.string
+            } else {
+                print("Failed to unarchive object with NSUnarchiver.")
             }
             return nil
         }
         return deprecatedUnarchive()
     }()
+    
     
     if let result = legacyResult {
         return result
@@ -610,14 +614,25 @@ func queryMessages(chatID: Int64, contactID: String, limit: Int?, additionalMess
         print(formattedMessage, terminator: "")
     }
 
+
+
     // Copy to clipboard
     let pasteboard = NSPasteboard.general
     pasteboard.clearContents()
     pasteboard.setString(formattedOutput, forType: .string)
     print("\nMessages copied to clipboard!")
+
+
 }
 
 func main() {
+    print("Starting main function...")
+
+    // Add a pretty print statement at the start
+    print("\n" + String(repeating: "=", count: 50))
+    print("Query Messages - Starting ..")
+    print(String(repeating: "=", count: 50) + "\n")
+
     let args = CommandLine.arguments
     var searchContact: String? = nil
     var externalFilePath: String? = nil
@@ -640,19 +655,39 @@ func main() {
         }
     }
 
+    print("Parsed arguments. Search contact: \(searchContact ?? "None"), External file path: \(externalFilePath ?? "None")")
+
     // Load external messages if specified
     var externalMessages: [Message]? = nil
     if let filePath = externalFilePath {
+        let startTime = CFAbsoluteTimeGetCurrent()
         externalMessages = loadExternalMessages(from: filePath)
         if externalMessages == nil {
             print("Warning: Failed to load external messages")
         }
+        let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+        print("External messages loaded in \(String(format: "%.2f", timeElapsed)) seconds")
     }
 
     // Load the cached contact names
+    let cacheLoadStartTime = CFAbsoluteTimeGetCurrent()
     var contactNameCache = loadCacheFromFile()
+    let cacheLoadTimeElapsed = CFAbsoluteTimeGetCurrent() - cacheLoadStartTime
+    print("Contact name cache loaded in \(String(format: "%.2f", cacheLoadTimeElapsed)) seconds")
 
+    // Check if the contact is in the cache
+    if let searchContact = searchContact?.lowercased(),
+       let cachedChat = contactNameCache[searchContact] {
+        print("One-to-one match found in cache for contact: \(cachedChat.participants.joined(separator: ", "))")
+        fetchAndDisplayMessages(for: cachedChat, externalMessages: externalMessages)
+        return
+    }
+
+    // If not found in cache, retrieve available chats
+    let availableChatsStartTime = CFAbsoluteTimeGetCurrent()
     let availableChats = getAvailableChats()
+    let availableChatsTimeElapsed = CFAbsoluteTimeGetCurrent() - availableChatsStartTime
+    print("Available chats retrieved in \(String(format: "%.2f", availableChatsTimeElapsed)) seconds")
 
     if availableChats.isEmpty {
         print("No chats found or unable to access the database.")
@@ -660,6 +695,7 @@ func main() {
     }
 
     // Filter based on search contact
+    let filterStartTime = CFAbsoluteTimeGetCurrent()
     var filteredChats = availableChats
     if let searchContact = searchContact?.lowercased() {
         filteredChats = availableChats.filter { chat in
@@ -670,6 +706,8 @@ func main() {
             return match
         }
     }
+    let filterTimeElapsed = CFAbsoluteTimeGetCurrent() - filterStartTime
+    print("Chats filtered in \(String(format: "%.2f", filterTimeElapsed)) seconds")
 
     // Save the updated cache
     saveCacheToFile(contactNameCache)
@@ -731,9 +769,12 @@ func main() {
 
     // Fetch messages for the selected chat
     fetchAndDisplayMessages(for: selectedChat, externalMessages: externalMessages)
+
 }
 
 func fetchAndDisplayMessages(for chat: (chatID: Int64, participants: [String], messageCount: Int64, lastMessageDate: String, lastMessageDateRaw: Int64), externalMessages: [Message]?) {
+    print("Fetching messages for chat ID: \(chat.chatID)")
+    
     // Get message limit
     var limit: Int?
     repeat {
@@ -752,30 +793,57 @@ func fetchAndDisplayMessages(for chat: (chatID: Int64, participants: [String], m
     } while true
 
     if let messages = fetchMessagesForChat(chatID: chat.chatID, participants: chat.participants, limit: limit, additionalMessages: externalMessages) {
+        print("Messages fetched successfully.")
         var formattedOutput = ""
         print("\nMessages:")
-        print(String(repeating: "-", count: 50))
+        print(String(repeating: "=", count: 50))
 
         // Sort messages by date (oldest to newest for display)
         let sortedMessages = messages.sorted { $0.messageDate < $1.messageDate }
         
-        // Display logic for terminal output
-        if let limit = limit, sortedMessages.count > limit {
-            // Display only the last N messages
-            for message in sortedMessages.suffix(limit) {
-                let formattedMessage = "\(message.messageDate) - \(message.sender): \(message.content)\n"
-                print(formattedMessage, terminator: "")
+        // Fetch the most recent 16 messages
+        let recentMessages = Array(sortedMessages.suffix(16))
+        
+        // Determine which messages to display
+        let displayMessages: [Message]
+        if recentMessages.count > 10 {
+            let firstFive = Array(recentMessages.prefix(5))
+            let lastFive = Array(recentMessages.suffix(5))
+            displayMessages = firstFive + lastFive
+            
+            // Calculate the number of messages not displayed
+            let missingMessagesCount = recentMessages.count - displayMessages.count
+            if missingMessagesCount > 0 {
+                // Print the first 5 messages
+                for message in firstFive {
+                    let truncatedContent = message.content.split(separator: "\n").first ?? ""
+                    let formattedMessage = "\(message.messageDate) - \(message.sender): \(truncatedContent)\n"
+                    print(formattedMessage, terminator: "")
+                }
+                
+                // Print the message indicating missing messages
+                print("\n... \(missingMessagesCount) messages not displayed ...\n")
+                
+                // Print the last 5 messages
+                for message in lastFive {
+                    let truncatedContent = message.content.split(separator: "\n").first ?? ""
+                    let formattedMessage = "\(message.messageDate) - \(message.sender): \(truncatedContent)\n"
+                    print(formattedMessage, terminator: "")
+                }
             }
         } else {
-            // If no limit or fewer messages than limit, display all
-            for message in sortedMessages {
-                let formattedMessage = "\(message.messageDate) - \(message.sender): \(message.content)\n"
+            displayMessages = recentMessages
+            // Print all messages if 10 or fewer
+            for message in displayMessages {
+                let truncatedContent = message.content.split(separator: "\n").first ?? ""
+                let formattedMessage = "\(message.messageDate) - \(message.sender): \(truncatedContent)\n"
                 print(formattedMessage, terminator: "")
             }
         }
+        print(String(repeating: "=", count: 50))
 
         // Format all displayed messages for clipboard
-        formattedOutput = sortedMessages.suffix(limit ?? sortedMessages.count).map { 
+        formattedOutput = sortedMessages.map { 
             "\($0.messageDate) - \($0.sender): \($0.content)\n" 
         }.joined()
 
@@ -787,7 +855,14 @@ func fetchAndDisplayMessages(for chat: (chatID: Int64, participants: [String], m
     } else {
         print("No messages found for the selected chat.")
     }
+
+    return
 }
 
 // Call the main function
 main()
+
+// Ensure this print statement is executed
+print("\n" + String(repeating: "=", count: 50))
+print("End of Script")
+print(String(repeating: "=", count: 50) + "\n")
