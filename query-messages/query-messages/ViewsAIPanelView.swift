@@ -11,13 +11,16 @@ import SwiftUI
 // Named `styleAccentColor` to avoid conflict with the View.accentColor(_:) instance method.
 private func styleAccentColor(for styleID: String) -> Color {
     switch styleID {
-    case "normal":    return .blue
-    case "keepgoing": return .orange
-    case "witty":     return .purple
-    case "playful":   return .green
-    case "emoji":     return Color(red: 0.85, green: 0.70, blue: 0.0)
-    case "pirate":    return Color(red: 0.72, green: 0.10, blue: 0.10)
-    default:          return .accentColor
+    case "normal":       return .blue
+    case "keepgoing":    return .orange
+    case "witty":        return .purple
+    case "playful":      return .green
+    case "emoji":        return Color(red: 0.85, green: 0.70, blue: 0.0)
+    case "pirate":       return Color(red: 0.72, green: 0.10, blue: 0.10)
+    case "connect_dots": return Color(red: 0.0,  green: 0.60, blue: 0.65)   // teal
+    case "real_talk":    return Color(red: 0.30, green: 0.30, blue: 0.80)   // indigo
+    case "pull_thread":  return Color(red: 0.20, green: 0.55, blue: 0.35)   // forest green
+    default:             return .accentColor
     }
 }
 
