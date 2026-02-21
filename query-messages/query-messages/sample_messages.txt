@@ -1,0 +1,8 @@
+[2/21/26, 9:00 AM] John Smith: Hey! Are you free this weekend?
+[2/21/26, 9:15 AM] Me: Yeah, I should be. What did you have in mind?
+[2/21/26, 9:20 AM] John Smith: Want to check out that new restaurant downtown?
+[2/21/26, 9:25 AM] Me: Sounds great! What time works for you?
+[2/21/26, 9:30 AM] John Smith: How about Saturday at 7pm?
+[2/21/26, 9:35 AM] Me: Perfect! I'll make a reservation.
+[2/21/26, 9:40 AM] John Smith: Awesome, looking forward to it!
+[2/21/26, 9:45 AM] Me: Me too! See you then.
