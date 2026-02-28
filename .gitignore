@@ -1,2 +1,6 @@
 /venv
 .gemini_api_key
+*.DS_Store
+*.xcuserstate
+kristina.txt
+kristina.json

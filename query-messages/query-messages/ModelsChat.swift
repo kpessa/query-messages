@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Chat: Identifiable, Hashable {
+struct Chat: Identifiable, Hashable, Codable {
     let id: Int64          // chatID (ROWID)
     let participants: [String]
     let messageCount: Int64

@@ -6,27 +6,37 @@
 //
 
 import SwiftUI
-import SwiftData
 
 @main
 struct query_messagesApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
-
+    @State private var viewModel = AppViewModel()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(viewModel)
+                .frame(minWidth: 1200, minHeight: 700)
         }
-        .modelContainer(sharedModelContainer)
+        .windowStyle(.hiddenTitleBar)
+        .windowToolbarStyle(.unified)
+        .commands {
+            CommandGroup(after: .newItem) {
+                Button("Refresh Chats") {
+                    Task {
+                        await viewModel.loadChats()
+                    }
+                }
+                .keyboardShortcut("r", modifiers: .command)
+                
+                Divider()
+                
+                Button("Get AI Suggestion") {
+                    Task {
+                        await viewModel.getAISuggestion()
+                    }
+                }
+                .keyboardShortcut("g", modifiers: [.command, .shift])
+            }
+        }
     }
 }

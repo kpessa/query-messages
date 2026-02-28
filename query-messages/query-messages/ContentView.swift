@@ -6,54 +6,80 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    @Environment(AppViewModel.self) private var viewModel
+    
     var body: some View {
         NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-            .toolbar {
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
+            // Left pane: Chat list
+            ChatListView()
+                .navigationSplitViewColumnWidth(min: 250, ideal: 300)
+        } content: {
+            // Center pane: Message thread
+            MessageThreadView()
+                .navigationSplitViewColumnWidth(min: 400, ideal: 600)
         } detail: {
-            Text("Select an item")
+            // Right pane: AI suggestions
+            AIPanelView()
+                .navigationSplitViewColumnWidth(min: 350, ideal: 450)
         }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK") {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            if let error = viewModel.errorMessage {
+                Text(error)
             }
         }
+        .overlay(alignment: .top) {
+            if viewModel.showFullDiskAccessBanner {
+                fullDiskAccessBanner
+            }
+        }
+    }
+    
+    private var fullDiskAccessBanner: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Full Disk Access Required")
+                        .fontWeight(.semibold)
+                    Text("Grant Full Disk Access to read iMessage database")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+                
+                Button("Open Settings") {
+                    viewModel.openSystemSettings()
+                }
+                .buttonStyle(.borderedProminent)
+                
+                Button {
+                    viewModel.showFullDiskAccessBanner = false
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .buttonStyle(.borderless)
+            }
+            .padding()
+            .background(.ultraThickMaterial)
+            .cornerRadius(12)
+            .shadow(radius: 4)
+            .padding()
+        }
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .environment(AppViewModel())
+        .frame(width: 1400, height: 800)
 }

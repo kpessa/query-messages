@@ -131,17 +131,17 @@ actor DatabaseService {
     
     // MARK: - Messages
     
-    func fetchMessages(for chatID: Int64, limit: Int = 100) async throws -> [Message] {
+    func fetchMessages(for chatID: Int64, limit: Int = 100, beforeDate: Int64 = Int64.max) async throws -> [Message] {
         return try await withCheckedThrowingContinuation { continuation in
             var db: OpaquePointer?
-            
+
             guard sqlite3_open_v2(dbPath, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else {
                 continuation.resume(throwing: DatabaseError.fullDiskAccessRequired)
                 return
             }
-            
+
             defer { sqlite3_close(db) }
-            
+
             let query = """
             SELECT
                 m.date,
@@ -149,7 +149,6 @@ actor DatabaseService {
                 COALESCE(m.text, '') as text,
                 m.attributedBody,
                 h.id as sender_id,
-                COALESCE(m.associated_message_type, 0) as reaction_type,
                 (SELECT a.mime_type FROM message_attachment_join maj
                  JOIN attachment a ON maj.attachment_id = a.ROWID
                  WHERE maj.message_id = m.ROWID LIMIT 1) as mime_type,
@@ -160,46 +159,42 @@ actor DatabaseService {
             JOIN chat_message_join cmj ON m.ROWID = cmj.message_id
             LEFT JOIN handle h ON m.handle_id = h.ROWID
             WHERE cmj.chat_id = ?
+              AND m.date < ?
+              AND NOT (COALESCE(m.associated_message_type, 0) >= 2000
+                   AND COALESCE(m.associated_message_type, 0) < 3000)
             ORDER BY m.date DESC
             LIMIT ?
             """
-            
+
             var stmt: OpaquePointer?
             guard sqlite3_prepare_v2(db, query, -1, &stmt, nil) == SQLITE_OK else {
                 let error = String(cString: sqlite3_errmsg(db))
                 continuation.resume(throwing: DatabaseError.queryFailed(error))
                 return
             }
-            
+
             defer { sqlite3_finalize(stmt) }
-            
+
             sqlite3_bind_int64(stmt, 1, chatID)
-            sqlite3_bind_int(stmt, 2, Int32(limit))
+            sqlite3_bind_int64(stmt, 2, beforeDate)
+            sqlite3_bind_int(stmt, 3, Int32(limit))
             
             var messages: [Message] = []
             
             while sqlite3_step(stmt) == SQLITE_ROW {
                 let dateRaw = sqlite3_column_int64(stmt, 0)
                 let isFromMe = sqlite3_column_int(stmt, 1) == 1
-                let reactionType = sqlite3_column_int64(stmt, 5)
 
                 let messageDate = Self.formatAppleDate(dateRaw)
                 let sender = isFromMe ? "Me" : self.getSenderSync(stmt: stmt, isFromMe: isFromMe)
+                let content = self.getMessageTextSync(stmt: stmt)
 
-                let content: String
-                if reactionType >= 2000 && reactionType < 3000 {
-                    // Tapback reaction — skip these, they clutter the thread
-                    continue
-                } else {
-                    content = self.getMessageTextSync(stmt: stmt)
-                }
-
-                let message = Message(
+                messages.append(Message(
+                    dateRaw: dateRaw,
                     messageDate: messageDate,
                     sender: sender,
                     content: content
-                )
-                messages.append(message)
+                ))
             }
             
             continuation.resume(returning: messages.reversed()) // Oldest first
@@ -237,7 +232,7 @@ actor DatabaseService {
         }
 
         // Use attachment mime type to give a meaningful label
-        if let mimeText = sqlite3_column_text(stmt, 6) {
+        if let mimeText = sqlite3_column_text(stmt, 5) {
             let mime = String(cString: mimeText)
             return describeAttachment(mimeType: mime, stmt: stmt)
         }
@@ -248,7 +243,7 @@ actor DatabaseService {
     private func describeAttachment(mimeType: String, stmt: OpaquePointer?) -> String {
         // Use filename as hint when available
         let filename: String?
-        if let nameText = sqlite3_column_text(stmt, 7) {
+        if let nameText = sqlite3_column_text(stmt, 6) {
             filename = String(cString: nameText)
         } else {
             filename = nil

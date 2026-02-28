@@ -11,9 +11,9 @@ import Contacts
 actor ContactService {
     private let store = CNContactStore()
     private var cache: [String: String] = [:]       // raw identifier → display name
-    private var phoneIndex: [String: String] = [:]  // last 10 digits → display name
+    private var phoneIndex: [String: String] = [:]  // normalized digits → display name
     private var emailIndex: [String: String] = [:]  // email → display name
-    private var photoCache: [String: Data] = [:]    // last 10 digits or email → thumbnail data
+    private var photoCache: [String: Data] = [:]    // normalized digits or email → image data
     private var indexed = false
 
     // MARK: - Authorization
@@ -48,29 +48,38 @@ actor ContactService {
             CNContactPhoneNumbersKey,
             CNContactEmailAddressesKey,
             CNContactThumbnailImageDataKey,
+            CNContactImageDataKey,
             CNContactImageDataAvailableKey
         ] as [CNKeyDescriptor]
 
         let request = CNContactFetchRequest(keysToFetch: keys)
         try? store.enumerateContacts(with: request) { contact, _ in
             let name = self.formatContactName(contact)
-            let photoData = contact.imageDataAvailable ? contact.thumbnailImageData : nil
+            // Prefer thumbnail (smaller/faster); fall back to full image data
+            let photoData: Data?
+            if contact.imageDataAvailable {
+                photoData = contact.thumbnailImageData ?? contact.imageData
+            } else {
+                photoData = nil
+            }
             for phone in contact.phoneNumbers {
                 let digits = phone.value.stringValue.filter { $0.isNumber }
+                // Index by last 10 digits (US numbers) and full digit string (international / short)
                 let last10 = String(digits.suffix(10))
-                if last10.count == 10 {
+                if !last10.isEmpty {
                     self.phoneIndex[last10] = name
-                    if let data = photoData {
-                        self.photoCache[last10] = data
-                    }
+                    if let data = photoData { self.photoCache[last10] = data }
+                }
+                // Also store the full digit string when it differs from last10
+                if digits.count > 10 || digits.count < 10, !digits.isEmpty {
+                    self.phoneIndex[digits] = name
+                    if let data = photoData { self.photoCache[digits] = data }
                 }
             }
             for email in contact.emailAddresses {
-                let emailStr = email.value as String
+                let emailStr = (email.value as String).lowercased()
                 self.emailIndex[emailStr] = name
-                if let data = photoData {
-                    self.photoCache[emailStr] = data
-                }
+                if let data = photoData { self.photoCache[emailStr] = data }
             }
         }
     }
@@ -90,13 +99,13 @@ actor ContactService {
 
     private func lookupContact(_ identifier: String) -> String {
         if identifier.contains("@") {
-            return emailIndex[identifier] ?? identifier
+            return emailIndex[identifier.lowercased()] ?? identifier
         }
         let digits = identifier.filter { $0.isNumber }
         let last10 = String(digits.suffix(10))
-        if last10.count == 10, let name = phoneIndex[last10] {
-            return name
-        }
+        // Try last-10 first (covers US numbers), then full digit string (international/short)
+        if let name = phoneIndex[last10] { return name }
+        if !digits.isEmpty, let name = phoneIndex[digits] { return name }
         return cleanPhoneNumber(identifier)
     }
 
@@ -146,13 +155,12 @@ actor ContactService {
             buildIndex()
         }
         if identifier.contains("@") {
-            return photoCache[identifier]
+            return photoCache[identifier.lowercased()]
         }
         let digits = identifier.filter { $0.isNumber }
         let last10 = String(digits.suffix(10))
-        if last10.count == 10 {
-            return photoCache[last10]
-        }
+        if let data = photoCache[last10] { return data }
+        if !digits.isEmpty, let data = photoCache[digits] { return data }
         return nil
     }
 }

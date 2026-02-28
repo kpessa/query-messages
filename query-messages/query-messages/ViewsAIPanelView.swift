@@ -20,6 +20,9 @@ private func styleAccentColor(for styleID: String) -> Color {
     case "connect_dots": return Color(red: 0.0,  green: 0.60, blue: 0.65)   // teal
     case "real_talk":    return Color(red: 0.30, green: 0.30, blue: 0.80)   // indigo
     case "pull_thread":  return Color(red: 0.20, green: 0.55, blue: 0.35)   // forest green
+    case "momentum":     return Color(red: 0.85, green: 0.45, blue: 0.05)   // amber
+    case "pattern_spotter": return Color(red: 0.45, green: 0.25, blue: 0.70)  // violet
+    case "tone_match":   return Color(red: 0.10, green: 0.50, blue: 0.60)   // cyan
     default:             return .accentColor
     }
 }
@@ -31,26 +34,38 @@ struct AIPanelView: View {
         @Bindable var vm = viewModel
 
         VStack(spacing: 0) {
-            if viewModel.aiSuggestions.isEmpty && !viewModel.isLoadingAI {
-                emptyStateView
-            } else {
-                // Scrollable content: context input + card grid
-                ScrollView {
-                    VStack(spacing: 16) {
-                        contextInputView(text: $vm.reactionContext)
+            // Tab picker — bound via vm for Bindable access
+            Picker("Tab", selection: $vm.selectedAITab) {
+                Text("Suggestions").tag(AITab.suggestions)
+                Text("Insights").tag(AITab.insights)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(.bar)
 
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 260))], spacing: 12) {
-                            ForEach(viewModel.responseStyles) { style in
-                                StyleCard(style: style)
-                            }
-                        }
-                    }
-                    .padding()
+            Divider()
+
+            if viewModel.sessionTotalTokens > 0 {
+                HStack {
+                    Spacer()
+                    Text("Session: \(formatTokenCount(viewModel.sessionTotalTokens)) tokens · \(formatCost(viewModel.sessionEstimatedCost))")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 4)
+                .background(.bar)
 
-                // Regenerate button pinned at bottom
                 Divider()
-                regenerateButton
+            }
+
+            // Tab content
+            switch viewModel.selectedAITab {
+            case .suggestions:
+                suggestionsTab
+            case .insights:
+                InsightsChatView()
             }
 
             if viewModel.showCopiedToast {
@@ -68,7 +83,77 @@ struct AIPanelView: View {
         .animation(.easeInOut(duration: 0.2), value: viewModel.showCopiedToast)
     }
 
-    // MARK: - Context input (shared between empty + populated states)
+    // MARK: - Suggestions tab
+
+    @ViewBuilder
+    private var suggestionsTab: some View {
+        @Bindable var vm = viewModel
+        if viewModel.aiSuggestions.isEmpty && !viewModel.isLoadingAI {
+            emptyStateView
+        } else {
+            ScrollView {
+                VStack(spacing: 16) {
+                    contextInputView(text: $vm.reactionContext)
+
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 260))], spacing: 12) {
+                        ForEach(viewModel.responseStyles.filter { $0.tier == .quick }) { style in
+                            StyleCard(style: style)
+                        }
+                    }
+
+                    HStack {
+                        Label("Thoughtful", systemImage: "sparkles.rectangle.stack")
+                            .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
+                        Spacer()
+                        Button {
+                            Task { await viewModel.getThoughtfulSuggestions() }
+                        } label: {
+                            Text("Generate All")
+                                .font(.caption)
+                        }
+                        .buttonStyle(.borderless)
+                        .foregroundStyle(.secondary)
+                        .disabled(viewModel.isLoadingThoughtful)
+                    }
+                    .padding(.top, 4)
+
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 260))], spacing: 12) {
+                        ForEach(viewModel.responseStyles.filter { $0.tier == .thoughtful }) { style in
+                            StyleCard(style: style)
+                        }
+                    }
+
+                    HStack {
+                        Label("Deep Analysis", systemImage: "brain.head.profile")
+                            .font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
+                        Spacer()
+                        Button {
+                            Task { await viewModel.getDeepSuggestions() }
+                        } label: {
+                            Text("Generate All")
+                                .font(.caption)
+                        }
+                        .buttonStyle(.borderless)
+                        .foregroundStyle(.secondary)
+                        .disabled(viewModel.isLoadingDeep)
+                    }
+                    .padding(.top, 4)
+
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 260))], spacing: 12) {
+                        ForEach(viewModel.responseStyles.filter { $0.tier == .deep }) { style in
+                            StyleCard(style: style)
+                        }
+                    }
+                }
+                .padding()
+            }
+
+            Divider()
+            regenerateButton
+        }
+    }
+
+    // MARK: - Context input
     @ViewBuilder
     private func contextInputView(text: Binding<String>) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -112,19 +197,19 @@ struct AIPanelView: View {
                 Button {
                     Task { await viewModel.getAISuggestion() }
                 } label: {
-                    Label("Regenerate All", systemImage: "arrow.clockwise.circle.fill")
+                    Label("Regenerate", systemImage: "arrow.clockwise.circle.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .disabled(viewModel.messages.isEmpty)
+                .disabled(viewModel.messages.isEmpty || viewModel.isLoadingThoughtful || viewModel.isLoadingDeep)
             }
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
     }
 
-    // MARK: - Empty state
+    // MARK: - Empty state (Suggestions tab)
     private var emptyStateView: some View {
         @Bindable var vm = viewModel
 
@@ -132,7 +217,6 @@ struct AIPanelView: View {
             VStack(spacing: 20) {
                 Spacer(minLength: 24)
 
-                // Sparkles icon with gradient backdrop
                 ZStack {
                     Circle()
                         .fill(
@@ -157,17 +241,15 @@ struct AIPanelView: View {
                 VStack(spacing: 6) {
                     Text("AI Response Suggestions")
                         .font(.title2).fontWeight(.semibold)
-                    Text("Get 6 style variations to respond to your conversation")
+                    Text("Get style variations to respond to your conversation")
                         .font(.body).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal)
 
-                // Prominent context input — same treatment as populated state
                 contextInputView(text: $vm.reactionContext)
                     .padding(.horizontal)
 
-                // Style preview chips in adaptive grid
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: 8) {
                     ForEach(viewModel.responseStyles) { style in
                         HStack(spacing: 6) {
@@ -217,13 +299,11 @@ struct StyleCard: View {
         @Bindable var vm = viewModel
 
         HStack(spacing: 0) {
-            // 3pt left accent bar
             Rectangle()
                 .fill(accent)
                 .frame(width: 3)
 
             VStack(alignment: .leading, spacing: 0) {
-                // Header: tinted background, larger emoji, semibold name, always-visible copy
                 HStack(alignment: .center, spacing: 8) {
                     Text(style.emoji)
                         .font(.title3)
@@ -246,7 +326,6 @@ struct StyleCard: View {
                 .padding(.vertical, 10)
                 .background(accent.opacity(0.10))
 
-                // Body content
                 VStack(alignment: .leading, spacing: 10) {
                     if let t = text {
                         Text(t)
@@ -254,6 +333,13 @@ struct StyleCard: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .fixedSize(horizontal: false, vertical: true)
                             .lineSpacing(3)
+
+                        if let usage = viewModel.suggestionUsage[style.id] {
+                            Text(formatTokenBadge(usage))
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                        }
 
                         if !isFollowingUp {
                             Button {
@@ -267,18 +353,27 @@ struct StyleCard: View {
                             .foregroundStyle(.secondary)
                         }
                     } else {
-                        // Loading state in accent color
-                        HStack(spacing: 8) {
-                            ProgressView()
-                                .controlSize(.small)
-                                .tint(accent)
-                            Text("Generating…")
-                                .font(.caption)
-                                .foregroundStyle(accent)
+                        if viewModel.loadingStyleIDs.contains(style.id) || style.tier == .quick {
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .tint(accent)
+                                Text("Generating…")
+                                    .font(.caption)
+                                    .foregroundStyle(accent)
+                            }
+                        } else {
+                            Button {
+                                Task { await viewModel.getSingleOptInSuggestion(for: style.id) }
+                            } label: {
+                                Label("Generate", systemImage: "sparkles")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(accent)
                         }
                     }
 
-                    // Inline follow-up
                     if isFollowingUp {
                         Divider()
                         HStack(spacing: 8) {

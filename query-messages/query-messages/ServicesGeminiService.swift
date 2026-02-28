@@ -7,6 +7,18 @@
 
 import Foundation
 
+struct TokenUsage: Codable {
+    let promptTokens: Int
+    let completionTokens: Int
+    var totalTokens: Int { promptTokens + completionTokens }
+    static let inputCostPerMToken = 0.075
+    static let outputCostPerMToken = 0.30
+    var estimatedCost: Double {
+        Double(promptTokens) * Self.inputCostPerMToken / 1_000_000
+        + Double(completionTokens) * Self.outputCostPerMToken / 1_000_000
+    }
+}
+
 enum GeminiError: Error, LocalizedError {
     case noAPIKey
     case invalidResponse
@@ -57,7 +69,7 @@ actor GeminiService {
     
     // MARK: - API Call
 
-    private func call(prompt: String) async throws -> String {
+    private func call(prompt: String) async throws -> (text: String, usage: TokenUsage?) {
         let url = URL(string: "\(baseURL)?key=\(apiKey)")!
 
         var request = URLRequest(url: url)
@@ -96,8 +108,8 @@ actor GeminiService {
             throw GeminiError.networkError(error)
         }
     }
-    
-    private func parseResponse(_ data: Data) throws -> String {
+
+    private func parseResponse(_ data: Data) throws -> (text: String, usage: TokenUsage?) {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let candidates = json["candidates"] as? [[String: Any]],
               let firstCandidate = candidates.first,
@@ -107,19 +119,70 @@ actor GeminiService {
               let text = firstPart["text"] as? String else {
             throw GeminiError.invalidResponse
         }
-        
-        return text
+
+        var usage: TokenUsage? = nil
+        if let usageMeta = json["usageMetadata"] as? [String: Any],
+           let promptTokens = usageMeta["promptTokenCount"] as? Int,
+           let completionTokens = usageMeta["candidatesTokenCount"] as? Int {
+            usage = TokenUsage(promptTokens: promptTokens, completionTokens: completionTokens)
+        }
+
+        return (text: text, usage: usage)
     }
     
     // MARK: - Convenience Methods
 
+    func askQuestion(
+        messages: [Message],
+        fileContent: String? = nil,
+        question: String,
+        priorQA: [QAEntry] = []
+    ) async throws -> (String, TokenUsage?) {
+        var prompt = ""
+
+        if let fileContent, !fileContent.isEmpty {
+            prompt += "Background context:\n\n\(fileContent)\n\n---\n\n"
+        }
+
+        prompt += "CONTEXT: In the conversation below, \"Me\" is always Kurt. Keep this in mind when answering questions about the conversation.\n\n"
+        prompt += "Here is the full conversation:\n\n"
+        for message in messages {
+            prompt += "[\(message.messageDate)] \(message.sender): \(message.content)\n"
+        }
+        prompt += "\n"
+
+        if !priorQA.isEmpty {
+            prompt += "Previous questions you have already answered about this conversation:\n"
+            for entry in priorQA.suffix(5) {
+                prompt += "Q: \(entry.question)\nA: \(entry.answer)\n\n"
+            }
+            prompt += "---\n\n"
+        }
+
+        prompt += "Question: \(question)\n\n"
+        prompt += "Answer directly and concisely based on the conversation and any background context provided above. "
+        prompt += "If the answer isn't clear from the available information, say so."
+
+        return try await call(prompt: prompt)
+    }
+
     func generateSuggestion(
         messages: [Message],
         context: String? = nil,
+        fileContent: String? = nil,
         stylePrompt: String = "Based on this conversation, suggest a thoughtful and appropriate response. Keep it concise and natural. Only return the response text, no preamble or explanation."
-    ) async throws -> String {
-        var prompt = "Here is the recent conversation:\n\n"
-        for message in messages.suffix(20) {
+    ) async throws -> (String, TokenUsage?) {
+        var prompt = ""
+
+        if let fileContent, !fileContent.isEmpty {
+            prompt += "Background context (conversation from another app or notes):\n\n"
+            prompt += fileContent
+            prompt += "\n\n---\n\n"
+        }
+
+        prompt += "CONTEXT: You are helping Kurt write his text messages. In the conversation below, \"Me\" is always Kurt. Your job is always to suggest what Kurt should send next — even if Kurt sent the last message (in that case, suggest a natural follow-up). Never write from the other person's perspective.\n\n"
+        prompt += "Here is the recent conversation:\n\n"
+        for message in messages {
             prompt += "[\(message.messageDate)] \(message.sender): \(message.content)\n"
         }
         prompt += "\n"

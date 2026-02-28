@@ -8,7 +8,6 @@
 
 import SwiftUI
 import AppKit
-import UniformTypeIdentifiers
 
 struct ChatListView: View {
     @Environment(AppViewModel.self) private var viewModel
@@ -23,7 +22,7 @@ struct ChatListView: View {
                 .padding()
 
             // Chat list
-            if viewModel.isLoadingChats {
+            if viewModel.isLoadingChats && viewModel.allChats.isEmpty {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.allChats.isEmpty {
@@ -95,19 +94,9 @@ struct ChatListView: View {
                 }
                 .disabled(viewModel.isLoadingChats)
             }
-
-            ToolbarItem {
-                Button {
-                    openExternalFile()
-                } label: {
-                    Label("Load External File", systemImage: "doc.text")
-                }
-            }
         }
         .task {
-            if viewModel.allChats.isEmpty {
-                await viewModel.loadChats()
-            }
+            await viewModel.loadChats()
         }
     }
 
@@ -120,22 +109,7 @@ struct ChatListView: View {
         }
     }
 
-    private func openExternalFile() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.canChooseFiles = true
-        panel.allowedContentTypes = [.plainText]
-        panel.message = "Choose a message export file"
 
-        panel.begin { response in
-            if response == .OK, let url = panel.url {
-                Task {
-                    await viewModel.loadExternalFile(url)
-                }
-            }
-        }
-    }
 }
 
 struct ChatRow: View {

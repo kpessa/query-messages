@@ -23,7 +23,7 @@ actor ExternalFileService {
         var currentText = ""
         
         for line in lines {
-            // Skip empty lines
+            // Skip empty lines∫
             if line.trimmingCharacters(in: .whitespaces).isEmpty {
                 continue
             }
@@ -33,6 +33,7 @@ actor ExternalFileService {
                 // Save previous message if exists
                 if !currentSender.isEmpty && !currentText.isEmpty {
                     messages.append(Message(
+                        dateRaw: 0,
                         messageDate: currentDate,
                         sender: currentSender,
                         content: currentText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -52,6 +53,7 @@ actor ExternalFileService {
         // Add last message
         if !currentSender.isEmpty && !currentText.isEmpty {
             messages.append(Message(
+                dateRaw: 0,
                 messageDate: currentDate,
                 sender: currentSender,
                 content: currentText.trimmingCharacters(in: .whitespacesAndNewlines)
